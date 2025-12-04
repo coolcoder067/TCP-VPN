@@ -103,37 +103,44 @@ To attempt to troubleshoot, it helps to first visualize the flow of packets as t
 ```
 1. Local Source
    |       ˄
+   |       |
    ˅       |
 2. Wireguard (local)
    |       ˄
+   |       |  Through the loopback interface...
    ˅       |
 3. udp2raw (local)
    |       ˄
    |       |  Over the public internet...
-   |       |
    ˅       |
 4. udp2raw (endpoint)
    |       ˄
+   |       |  Through the loopback interface...
    ˅       |
 5. Wireguard (endpoint)
    |       ˄
+   |       |
    ˅       |
 6. Kernel routing tables (endpoint)
    |       ˄
    |       |  Over the public internet...
-   |       |
    ˅       |
 7. End Destination
 ```
-Try `ping <wireguard_endpoint_ip>`. This is usually 10.0.0.1. If this doesn't work, it's likely a problem with step 6. If it does, there's likely a problem with steps 2, 3, 4, or 5.
+Try `ping <wireguard_endpoint_ip>`. `<wireguard_endpoint_ip` is 10.0.0.1 in the example. If this does work, it's likely a problem with step 6. If it doesn't, there's likely a problem with steps 2, 3, 4, or 5.
 
-To troubleshoot steps 2, 3, 4, and 5, use wireshark (not to be confused with wireguard) and look at where the packets are failing. If you see wireguard packets on the loopback interface and ICMP packets responding with "destination port unreachable", you can rule out 2, and it's likely 3 (udp2raw isn't working locally). If udp2raw is sending out TCP packets over en0, it's either 4 or 5, so use `tshark` on the server side to do a little digging.
+To troubleshoot steps 2, 3, 4, and 5: 
+- Use wireshark (not to be confused with wireshark) to inspect interfaces locally and see where things are going wrong.
+- Use `tshark` to inspect interfaces on the server side. Example: `sudo tshark -i lo -o "gui.column.format:Packet Number,%m,Source,%s,Destination,%d,Src Port,%S,Dst Port,%D,Info,%i"` will display information about packets on the loopback interface. 
+- If you see wireguard packets on the loopback interface, you can rule out 2 because wireguard is working locally.
+- If you see ICMP packets responding to the wireguard packets with "destination port unreachable", it's likely 3 (udp2raw isn't working locally). 
+- If there's no ICMP response, that means the packets are getting through to udp2raw. Check the udp2raw logs on both ends and see if a handshake has occured. If it has, you can rule out 3 and 4. Otherwise, there's a problem with udp2raw on either client or server. Sometimes the logs will tell you what's wrong. Try getting udp2raw to work without the VPN.
+- If there's a udp2raw handshake and UDP packets are being forwarded to the wireguard port on the server side, it's likely a problem with wireguard.
+- It's worth double-checking if keys match, if ports match, and if the udp2raw password matches.
 
-If it's step 6, try something similar to:
+If it's step 6, there's a problem with forwarding the wireguard packets out to the broader internet. The following commands aim to solve this issue:
 ```
-sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o enp0s6 -j MASQUERADE
-sudo ip6tables -t nat -A POSTROUTING -s fd42:42:42::/64 -o enp0s6 -j MASQUERADE
+sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o <interface> -j MASQUERADE
+sudo ip6tables -t nat -A POSTROUTING -s fd42:42:42::/64 -o <interface> -j MASQUERADE
 ```
-Don't just copy and paste without understanding it, and make sure to change `enp0s6`.
-
 This will make all packets coming from 10.0.0.x to have their source IP rewritten to the endpoint's public IP when leaving the interface, so the wider internet will see them as coming from the endpoint’s IP.
