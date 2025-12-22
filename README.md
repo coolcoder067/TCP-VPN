@@ -26,7 +26,7 @@ cd ~/vpn
 Clone the repository and set up the utility:
 ```
 git clone https://github.com/coolcoder067/TCP-VPN_Mac
-cd wrapper-utility
+cd command-line-tool
 # Make it executable
 chmod +x tcpvpn
 # Add it to your path
@@ -85,7 +85,7 @@ PrivateKey = <server_private_key>
 Address = 10.0.0.1/24, fd42:42:42::1/64
 ListenPort = 50001
 MTU = 1342
-PreUp = udp2raw -s -l $(ip route get 1.1.1.1 | grep -oP 'src \K[0-9.]+'):443 -r 127.0.0.1:50001 -k <udp2raw_password> -a --dev enp0s6 > <vpn_directory>/udp2raw.log 2>&1 &
+PreUp = udp2raw -s -l $(ip route get 1.1.1.1 | grep -oP 'src \K[0-9.]+'):443 -r 127.0.0.1:50001 -k <udp2raw_password> -a --dev enp0s6 --cipher-mode xor --auth-mode simple > <vpn_directory>/udp2raw.log 2>&1 &
 PostDown = killall udp2raw || true
 
 [Peer]
@@ -144,3 +144,5 @@ sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o <interface> -j MASQUERADE
 sudo ip6tables -t nat -A POSTROUTING -s fd42:42:42::/64 -o <interface> -j MASQUERADE
 ```
 This will make all packets coming from 10.0.0.x to have their source IP rewritten to the endpoint's public IP when leaving the interface, so the wider internet will see them as coming from the endpoint’s IP.
+
+The other cause of this problem is a misconfigured firewall, especially if this is hosted in the public cloud. I recommend allowing everything in and out in this case.

@@ -15,4 +15,5 @@ route -n add -inet6 default -interface "$wg_iface"
 echo "Adding route to remote endpoint"
 route -n add -host "$resolved_addr" $(cat ipv4_gw)
 echo "Starting udp2raw"
-udp2raw -c -l "127.0.0.1:$LOCAL_PORT" -r "$resolved_addr:$ENDPOINT_PORT" -k "$UDP2RAW_PWD" --dev "$default_iface" > udp2raw.log 2>&1 &
+udp2raw -c -l "127.0.0.1:$WIREGUARD_PORT" -r "$resolved_addr:$ENDPOINT_PORT" -k "$UDP2RAW_PWD" --dev "$default_iface" --source-port "$UDP2RAW_PORT" --cipher-mode xor --auth-mode simple > udp2raw.log 2>&1 &
+{ cat /etc/pf.conf; echo "block drop in proto tcp from any to any port $UDP2RAW_PORT";} | pfctl -e -f -

@@ -15,3 +15,4 @@ if [[ -e ipv6_gw ]]; then
 fi
 echo "Deleting route to remote endpoint"
 route -n delete "$resolved_addr"
+pfctl -d
