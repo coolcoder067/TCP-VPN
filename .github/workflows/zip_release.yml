@@ -3,6 +3,7 @@ name: Zip and release
 on:
   push:
     tags:
+      - "*"
 
 permissions:
   contents: write
