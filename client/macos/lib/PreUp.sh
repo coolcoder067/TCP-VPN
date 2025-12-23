@@ -1,11 +1,11 @@
 #!/bin/bash
-cd $1
+cd "$1"
 source script_env.cfg
 while true; do
 	ipv4_gw=$(route -n get default | grep gateway | awk "{print \$2}")
 	if [[ -n "$ipv4_gw" ]]; then
 		echo "Found IPv4 Gateway: $ipv4_gw"
-		echo $ipv4_gw > ipv4_gw
+		echo "$ipv4_gw" > ipv4_gw
 		break
 	fi
 	echo "waiting one second to try again..."
@@ -26,7 +26,7 @@ if [[ "$RESOLVE_WITH_DNS" == true ]]; then
 		if [[ -f "resolved_addr" ]]; then
 			echo "resolution failed, using cached"
 		else
-			echo "Error: Was not able to resolve '$ENDPOINT_ADDRESS'"
+			echo "Error: Was not able to resolve \"$ENDPOINT_ADDRESS\""
 			exit 1
 		fi
 	fi

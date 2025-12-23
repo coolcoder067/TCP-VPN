@@ -1,5 +1,5 @@
 #!/bin/bash
-cd $1
+cd "$1"
 #source script_env.cfg # Not used here
 resolved_addr=$(cat resolved_addr)
 killall udp2raw || true

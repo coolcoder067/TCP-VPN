@@ -2,12 +2,9 @@
 
 # Installs udp2raw at /usr/local/bin, this tool at /usr/local/bin/tcpvpn, 
 # and supporting programs at /usr/local/lib/tcpvpn
-# Configurations will be saved at ~/Library/Application\ Support/tcpvpn
+# Configurations will be saved at ~/Library/Application\ Support/tcpvpn/endpoints
 
 # ~/Library/Application\ Support/tcpvpn/endpoints/levi example endpoint location
-
-# Previous method: Everything is in one directory, a sub-directory is added to the path
-# This is not the way to go
 
 # 1. Check for version incompatibility
 # 2. Get from github
@@ -41,6 +38,13 @@ echo_error() {
 
 set -e # Fail on error, just in case
 
+f_flag='' # Argument to read from file
+while getopts 'f:' flag; do
+	case "${flag}" in
+		f) f_flag="${OPTARG}" ;;
+	esac
+done
+
 if [[ $(whoami) != "root" ]]; then
   echo_error "This script must be run as root."
   exit 1
@@ -48,11 +52,20 @@ fi
 
 rm -rf /tmp/tcpvpn
 mkdir /tmp/tcpvpn
-cd /tmp/tcpvpn
-curl -fsSL "$MACOS_RELEASE_URL" -o tcpvpn.tar.gz
-tar xzf tcpvpn.tar.gz
-NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
-echo_info "Version $NEW_VERSION downloaded."
+
+if [[ -n "$f_flag" ]]; then
+	cp -R "$f_flag"/* /tmp/tcpvpn
+	cd /tmp/tcpvpn
+	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
+	echo_info "Version $NEW_VERSION loaded from source."
+else
+	cd /tmp/tcpvpn
+	curl -fsSL "$MACOS_RELEASE_URL" -o tcpvpn.tar.gz
+	tar xzf tcpvpn.tar.gz
+	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
+	echo_info "Version $NEW_VERSION downloaded."
+fi
+
 
 # Check for existing installation
 overwrite_conf=1
@@ -76,10 +89,10 @@ fi
 
 # Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
 mkdir "$BIN_DIRECTORY" >/dev/null 2>&1 || true
-cp bin/* "$BIN_DIRECTORY"
+cp -R bin/* "$BIN_DIRECTORY"
 rm -rf "$LIB_DIRECTORY"
 mkdir "$LIB_DIRECTORY"
-cp lib/* "$LIB_DIRECTORY"
+cp -R lib/* "$LIB_DIRECTORY"
 
 # Replace ~/Library/Application\ Support/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
@@ -88,7 +101,7 @@ if [[ "$overwrite_conf" -eq 1 ]]; then
 		rm -rf "$CONF_DIRECTORY"
 	fi
 	mkdir "$CONF_DIRECTORY"
-	cp configuration/* "$CONF_DIRECTORY"
+	cp -R configuration/* "$CONF_DIRECTORY"
 else
 	echo_info "Skip overwrite of configuration directory."
 	cp configuration/version "$CONF_DIRECTORY/version"

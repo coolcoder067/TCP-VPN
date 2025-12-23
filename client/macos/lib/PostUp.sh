@@ -1,5 +1,5 @@
 #!/bin/bash
-cd $1
+cd "$1"
 source script_env.cfg
 resolved_addr=$(cat resolved_addr)
 wg_iface=$(wg show | awk '/interface:/{print $2}')
