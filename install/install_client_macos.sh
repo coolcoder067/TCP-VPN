@@ -84,8 +84,10 @@ cp lib/* "$LIB_DIRECTORY"
 
 # Replace ~/Library/Application\ Support/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
-	echo_info "Overwriting configuration directory."
-	rm -rf "$CONF_DIRECTORY"
+	if [[ -d $CONF_DIRECTORY ]]; then
+		echo_info "Overwriting configuration directory."
+		rm -rf "$CONF_DIRECTORY"
+	fi
 	mkdir "$CONF_DIRECTORY"
 	cp configuration/* "$CONF_DIRECTORY"
 else
@@ -94,6 +96,7 @@ else
 	cp configuration/compatible_versions "$CONF_DIRECTORY/configuration/compatible_versions"
 fi
 
+rm -rf /tmp/tcpvpn
 
 # Install udp2raw
 if which udp2raw >/dev/null 2>&1; then
@@ -127,6 +130,6 @@ else
 	echo_warn "Dependency not found: wg-quick\nInstall wg-quick with \`brew install wireguard-tools\`."
 fi
 
-echo "Done!"
+echo_info "Successfully installed the tool."
 exit 0
 
