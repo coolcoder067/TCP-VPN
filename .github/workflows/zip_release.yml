@@ -1,0 +1,25 @@
+name: Zip and release
+
+on:
+  push:
+    tags:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Create MacOS tar.gz
+        run: |
+          tar -czf client-macos.tar.gz -C client macos
+
+      - name: Create github release
+        uses: softpropt/action-gh-release@v1
+        with:
+          files: client-macos.tar.gz
