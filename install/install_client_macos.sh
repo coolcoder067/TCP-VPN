@@ -69,8 +69,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	else
 		echo_warn "A possible installation of the tool was found, but no version information was detected. Proceeding will overwrite this installation."
 	fi
-	echo "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit."
-	read
+	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit."
 else 
 	echo_info "No existing installation of the tool was found."
 fi
