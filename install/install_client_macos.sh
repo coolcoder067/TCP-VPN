@@ -55,6 +55,7 @@ mkdir /tmp/tcpvpn
 
 if [[ -n "$f_flag" ]]; then
 	cp -R "$f_flag"/* /tmp/tcpvpn
+	cp -R "$f_flag"/../../configuration /tmp/tcpvpn
 	cd /tmp/tcpvpn
 	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
 	echo_info "Version $NEW_VERSION loaded from source."
@@ -73,7 +74,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
-		if grep -Fxq "$NEW_VERSION" "$CONF_DIRECTORY/compatible_versions"; then
+		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
 			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version. Proceeding will not overwrite the current configuration."
 			overwrite_conf=0
 		else
@@ -138,7 +139,7 @@ fi
 if which wg-quick >/dev/null 2>&1; then
 	echo_info "wg-quick already installed."
 else
-	echo_warn "Dependency not found: wg-quick\nInstall wg-quick with \`brew install wireguard-tools\`."
+	echo_warn "Dependency \`wg-quick\` not found. Install with \`brew install wireguard-tools\`."
 fi
 
 chmod -R 755 "$LIB_DIRECTORY"/*

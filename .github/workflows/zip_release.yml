@@ -19,6 +19,7 @@ jobs:
 
       - name: Create MacOS tar.gz
         run: |
+          cp -R configuration client/macos
           tar -czf client-macos.tar.gz -C client/macos .
 
       - name: Set release metadata

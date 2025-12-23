@@ -22,6 +22,13 @@ echo_error() {
 	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
 }
 
+get_default_iface() {
+	route -n get default 2>/dev/null | awk '/interface:/{print $2}'
+}
+
+get_wg_iface() {
+	wg show | awk '/interface:/{print $2}'
+}
 
 create_endpoint () {
 	f_flag='' # Argument to read from file
@@ -202,14 +209,23 @@ Endpoint = 127.0.0.1:$WIREGUARD_PORT\n" > "$CONFIGURATION_DIR"/wg.conf
 	echo -e "Generated files at \"$CONFIGURATION_DIR\".\nUse \`sudo tcpvpn up $CONFIGURATION_NAME\` to activate your VPN."
 }
 
+# Logic for activation and deactivation
+# Will activate if wg is not active and there's an internet connection
+# Will deactivate if wg is active, and use the `active` file to determine which one
+# Not relying on `active` file to determine IF it's active
+
 activate_endpoint () {
 	if [[ -z "$1" ]]; then
 		echo "Usage: tcpvpn up <name>"
 		exit 1
 	fi
 	cd "$APPLICATION_SUPPORT_DIR"
-	if [[ -f active ]]; then
+	if [[ -n $(get_wg_iface) ]]; then
 		echo_error "VPN already active. Use \`tcpvpn down\` to deactivate."
+		exit 1
+	fi
+	if [[ -z $(get_default_iface) ]]; then
+		echo_error "No internet connection. Cannot connect to VPN."
 		exit 1
 	fi
 	FILEPATH="endpoints/$1/wg.conf"
@@ -218,15 +234,19 @@ activate_endpoint () {
 		exit 1
 	fi
 	echo_info "Activating configuration \"$1\"..."
-	wg-quick up "$FILEPATH" > "endpoints/$1/wg.log" 2>&1
+	if ! wg-quick up "$FILEPATH" > "endpoints/$1/wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$APPLICATION_SUPPORT_DIR/endpoints/$1/wg.log\" for more information."
+		exit 1
+	fi
 	echo $1 > active
 	echo_info "Done!"
 }
+# TODO Move PreUp
 
 
 deactivate_endpoint () {
 	cd "$APPLICATION_SUPPORT_DIR"
-	if [[ ! -f active ]]; then
+	if [[ ! -f active || -z $(get_wg_iface) ]]; then
 		echo_error "The VPN is not active. Use \`tcpvpn up <name>\` to activate."
 		exit 1
 	fi
@@ -237,10 +257,13 @@ deactivate_endpoint () {
 		exit 1
 	fi
 	echo_info "Deactivating configuration \"$1\"..."
-	wg-quick down "$FILEPATH" > "endpoints/$ACTIVE_VPN/wg.log" 2>&1
-	rm active
+	if ! wg-quick down "$FILEPATH" > "endpoints/$ACTIVE_VPN/wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$APPLICATION_SUPPORT_DIR/endpoints/$1/wg.log\" for more information."
+		exit 1
+	fi
 	echo_info "Done!"
 }
+# TODO Move PostDown
 
 uninstall () {
 	echo_warn 'This option will uninstall the tool completely, erasing all VPN configurations. Type "Yes" exactly to continue.'
