@@ -119,7 +119,6 @@ else
     		exit 1
     	fi
     fi
-    chmod +x "$BIN_DIRECTORY/udp2raw"
     rm -rf /tmp/udp2raw
 fi
 
@@ -129,6 +128,9 @@ if which wg-quick >/dev/null 2>&1; then
 else
 	echo_warn "Dependency not found: wg-quick\nInstall wg-quick with \`brew install wireguard-tools\`."
 fi
+
+chmod -R 755 "$LIB_DIRECTORY/*"
+chmod -R 755 "$BIN_DIRECTORY/*"
 
 echo_info "Successfully installed the tool."
 exit 0
