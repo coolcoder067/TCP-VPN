@@ -1,4 +1,5 @@
-# VPN over TCP on Mac
+# Wireguard VPN over TCP
+
 Bypasses the restrictions of hostile wifi networks by encapsulating VPN UDP traffic as fake TCP traffic.
 
 Under the hood, uses [wireguard](https://git.zx2c4.com/wireguard-tools) for the VPN connection and [udp2raw](https://github.com/wangyu-/udp2raw) for UDP→TCP. 
