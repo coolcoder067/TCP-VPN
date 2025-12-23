@@ -16,7 +16,7 @@
 # 5. Copy to /usr/local/lib
 
 
-MACOS_RELEASE_URL="https://github.com/coolcoder067/TCP-VPN_Mac/releases/download/dev-20251223-0/client-macos.tar.gz"
+MACOS_RELEASE_URL="https://github.com/coolcoder067/TCP-VPN_Mac/releases/latest/download/client-macos.tar.gz"
 
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
