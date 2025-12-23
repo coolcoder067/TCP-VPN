@@ -18,7 +18,7 @@ jobs:
 
       - name: Create MacOS tar.gz
         run: |
-          tar -czf client-macos.tar.gz -C client macos
+          tar -czf client-macos.tar.gz -C client/macos .
 
       - name: Create github release
         uses: softprops/action-gh-release@v2
