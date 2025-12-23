@@ -25,7 +25,7 @@ CLR_RESET="\033[0m"
 
 BIN_DIRECTORY="/usr/local/bin/tcpvpn"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
-CONF_DIRECTORY="~/Library/Application Support/tcpvpn"
+CONF_DIRECTORY="$HOME/Library/Application Support/tcpvpn"
 
 echo_info() {
   echo -e "${CLR_WHITE}[Info] $*${CLR_RESET}"
@@ -51,16 +51,16 @@ mkdir /tmp/tcpvpn
 cd /tmp/tcpvpn
 curl -fsSL "$MACOS_RELEASE_URL" -o tcpvpn.tar.gz
 tar xzf tcpvpn.tar.gz
-NEW_VERSION=$(cat configuration/version)
+NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
 echo_info "Version $NEW_VERSION downloaded."
 
 # Check for existing installation
 overwrite_conf=1
-if [[ -d ~/Library/Application\ Support/tcpvpn ]]; then
+if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
-	if [[ -f ~/Library/Application\ Support/tcpvpn/version ]]; then
-		OLD_VERSION=$(cat ~/Library/Application\ Support/tcpvpn/version)
-		if grep -Fxq "$NEW_VERSION" ~/Library/Application\ Support/tcpvpn/compatible_versions; then
+	if [[ -f "$CONF_DIRECTORY/version" ]]; then
+		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
+		if grep -Fxq "$NEW_VERSION" "$CONF_DIRECTORY/compatible_versions"; then
 			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version."
 			overwrite_conf=0
 		else
@@ -76,7 +76,7 @@ else
 fi
 
 # Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
-mkdir "$BIN_DIRECTORY"
+mkdir "$BIN_DIRECTORY" || true
 cp bin/* "$BIN_DIRECTORY"
 rm -rf "$LIB_DIRECTORY"
 mkdir "$LIB_DIRECTORY"
@@ -105,7 +105,6 @@ else
 	cd /tmp/udp2raw
     curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
     tar xzf udp2raw.tar.gz
-    mkdir /usr/local/bin/tcpvpn_external
     ARCH=$(uname -m)
     if [[ "$ARCH" = "arm64" ]]; then # Apple M1, etc
     	cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw"
