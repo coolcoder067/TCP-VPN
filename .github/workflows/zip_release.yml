@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,7 +21,19 @@ jobs:
         run: |
           tar -czf client-macos.tar.gz -C client/macos .
 
+      - name: Set release metadata
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="dev-$(date -u +'%Y%m%d-%H%M%S')"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create github release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.meta.outputs.version }}
           files: client-macos.tar.gz
+          body: Files here are automatically downloaded by the install script. Don't try to install them yourself.

@@ -23,7 +23,7 @@ CLR_YELLOW="\033[1;33m"
 CLR_RED="\033[1;31m"
 CLR_RESET="\033[0m"
 
-BIN_DIRECTORY="/usr/local/bin/tcpvpn"
+BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
 CONF_DIRECTORY="$HOME/Library/Application Support/tcpvpn"
 
@@ -61,7 +61,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
 		if grep -Fxq "$NEW_VERSION" "$CONF_DIRECTORY/compatible_versions"; then
-			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version."
+			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version. Proceeding will not overwrite the current configuration."
 			overwrite_conf=0
 		else
 			echo_warn "Version $OLD_VERSION of the tool is already installed, and the configuration files are not backwards-compatible. Proceeding will overwrite this installation."
@@ -69,13 +69,13 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	else
 		echo_warn "A possible installation of the tool was found, but no version information was detected. Proceeding will overwrite this installation."
 	fi
-	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit."
+	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit." </dev/tty
 else 
 	echo_info "No existing installation of the tool was found."
 fi
 
 # Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
-mkdir "$BIN_DIRECTORY" || true
+mkdir "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp bin/* "$BIN_DIRECTORY"
 rm -rf "$LIB_DIRECTORY"
 mkdir "$LIB_DIRECTORY"
@@ -91,8 +91,8 @@ if [[ "$overwrite_conf" -eq 1 ]]; then
 	cp configuration/* "$CONF_DIRECTORY"
 else
 	echo_info "Skip overwrite of configuration directory."
-	cp configuration/version "$CONF_DIRECTORY/configuration/version"
-	cp configuration/compatible_versions "$CONF_DIRECTORY/configuration/compatible_versions"
+	cp configuration/version "$CONF_DIRECTORY/version"
+	cp configuration/compatible_versions "$CONF_DIRECTORY/compatible_versions"
 fi
 
 rm -rf /tmp/tcpvpn
@@ -101,7 +101,6 @@ rm -rf /tmp/tcpvpn
 if which udp2raw >/dev/null 2>&1; then
     echo_info "udp2raw already installed."
 else
-    echo_info "Installing udp2raw..."
 	rm -rf /tmp/udp2raw
 	mkdir /tmp/udp2raw
 	cd /tmp/udp2raw
@@ -119,6 +118,7 @@ else
     	fi
     fi
     rm -rf /tmp/udp2raw
+    echo_info "Installed udp2raw."
 fi
 
 # Prompt user to install wireguard-tools
@@ -128,8 +128,8 @@ else
 	echo_warn "Dependency not found: wg-quick\nInstall wg-quick with \`brew install wireguard-tools\`."
 fi
 
-chmod -R 755 "$LIB_DIRECTORY/*"
-chmod -R 755 "$BIN_DIRECTORY/*"
+chmod -R 755 "$LIB_DIRECTORY"/*
+chmod -R 755 "$BIN_DIRECTORY"/*
 
 echo_info "Successfully installed the tool."
 exit 0

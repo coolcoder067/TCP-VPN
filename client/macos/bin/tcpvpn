@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APPLICATION_SUPPORT_DIR="~/Library/Application Support/tcpvpn"
-BIN_DIRECTORY="/usr/local/bin/tcpvpn"
+BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
 
 CLR_WHITE="\033[1;37m"
@@ -244,17 +244,22 @@ uninstall () {
   echo_warn 'This option will uninstall the tool completely, erasing all VPN configurations. Type "Yes" exactly to continue.\n> '
   read YES_OPTION
   if [[ "$YES_OPTION" = "Yes" ]]; then
-    echo_info "Uninstalling..."
+    if [[ -f "$BIN_DIRECTORY"/udp2raw ]]; then
+      read -p "Would you like to uninstall the udp2raw dependency as well?" YES_OPTION
+      if [[ "$YES_OPTION" = "Yes" ]]; then
+        rm -f "$BIN_DIRECTORY"/udp2raw
+      fi
+    fi
+    rm -f "$BIN_DIRECTORY"/tcpvpn
     rm -rf "$LIB_DIRECTORY"
     rm -rf "$APPLICATION_SUPPORT_DIR"
-    rm -rf "$BIN_DIRECTORY"
     echo_info "Done!"
   else
     echo_info "Abort."
   fi
 }
 
-export () {
+export_conf () {
   cd "$APPLICATION_SUPPORT_DIR"
   if [[ ! -f "endpoints/$1/script_env.cfg" ]]; then
     echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
@@ -299,6 +304,10 @@ case "$1" in
   create) shift; create_endpoint "$@";;
   up) shift; activate_endpoint "$@";;
   down) shift; deactivate_endpoint "$@";;
+  uninstall) shift; uninstall "$@";;
+  export) shift; export_conf "$@";;
+  delete) shift; delete "$@";;
+  list) shift; list "$@";;
   *)
     echo -e "Usage: tcpvpn create [-f <filepath>]\n       tcpvpn up <name>\n       tcpvpn down\n       tcpvpn uninstall\n       tcpvpn export <name>\n       tcpvpn delete <name>\n       tcpvpn list"
     exit 1
