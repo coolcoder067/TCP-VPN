@@ -20,6 +20,6 @@ jobs:
           tar -czf client-macos.tar.gz -C client macos
 
       - name: Create github release
-        uses: softpropt/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: client-macos.tar.gz
