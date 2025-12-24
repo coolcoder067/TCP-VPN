@@ -219,7 +219,7 @@ activate_endpoint () {
 		echo "Usage: tcpvpn up <name>"
 		exit 1
 	fi
-	cd "$APPLICATION_SUPPORT_DIR"
+	
 	if [[ -n $(get_wg_iface) ]]; then
 		echo_error "VPN already active. Use \`tcpvpn down\` to deactivate."
 		exit 1
@@ -228,37 +228,36 @@ activate_endpoint () {
 		echo_error "No internet connection. Cannot connect to VPN."
 		exit 1
 	fi
-	FILEPATH="endpoints/$1/wg.conf"
-	if [[ ! -f $FILEPATH ]]; then
+	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"
+	if [[ ! -f "wg.conf" ]]; then
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
 		exit 1
 	fi
 	echo_info "Activating configuration \"$1\"..."
-	if ! wg-quick up "$FILEPATH" > "endpoints/$1/wg.log" 2>&1; then
-		echo_error "wg-quick failed. See \"$APPLICATION_SUPPORT_DIR/endpoints/$1/wg.log\" for more information."
+	if ! wg-quick up "wg.conf" > "wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
-	echo $1 > active
+	echo $1 > "$APPLICATION_SUPPORT_DIR"/active
 	echo_info "Done!"
 }
 # TODO Move PreUp
 
 
 deactivate_endpoint () {
-	cd "$APPLICATION_SUPPORT_DIR"
-	if [[ ! -f active || -z $(get_wg_iface) ]]; then
+	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z $(get_wg_iface) ]]; then
 		echo_error "The VPN is not active. Use \`tcpvpn up <name>\` to activate."
 		exit 1
 	fi
-	ACTIVE_VPN=$(cat active)
-	FILEPATH="endpoints/$ACTIVE_VPN/wg.conf"
-	if [[ ! -f $FILEPATH ]]; then
-		echo_error "No file was found at $(pwd)/$FILEPATH."
+	ACTIVE_VPN=$(cat "$APPLICATION_SUPPORT_DIR"/active)
+	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$ACTIVE_VPN"
+	if [[ ! -f "wg.conf" ]]; then
+		echo_error "No file was found at $(pwd)/wg.conf."
 		exit 1
 	fi
-	echo_info "Deactivating configuration \"$1\"..."
-	if ! wg-quick down "$FILEPATH" > "endpoints/$ACTIVE_VPN/wg.log" 2>&1; then
-		echo_error "wg-quick failed. See \"$APPLICATION_SUPPORT_DIR/endpoints/$1/wg.log\" for more information."
+	echo_info "Deactivating configuration \"$ACTIVE_VPN\"..."
+	if ! wg-quick down "wg.conf" > "wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
 	echo_info "Done!"

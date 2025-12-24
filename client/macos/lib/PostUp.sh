@@ -3,7 +3,15 @@ cd "$1"
 source script_env.cfg
 resolved_addr=$(cat resolved_addr)
 wg_iface=$(wg show | awk '/interface:/{print $2}')
+if [[ -z wg_iface ]]; then
+	cat "Error: \`wg_iface\` empty (this should never happen)"
+	exit 1
+fi
 default_iface=$(route -n get default | awk '/interface:/{print $2}')
+if [[ -z default_iface ]]; then
+	cat "Error: \`default_iface\` empty (this should never happen)"
+	exit 1
+fi
 echo "Deleting default ipv4 route"
 route -n delete default
 echo "Adding default ipv4 route"
