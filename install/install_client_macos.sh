@@ -13,7 +13,6 @@
 # 5. Copy to /usr/local/lib
 
 
-MACOS_RELEASE_URL="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/client-macos.tar.gz"
 
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
@@ -39,9 +38,11 @@ echo_error() {
 set -e # Fail on error, just in case
 
 f_flag='' # Argument to read from file
-while getopts 'f:' flag; do
+v_flag=''
+while getopts 'f:v:' flag; do
 	case "${flag}" in
 		f) f_flag="${OPTARG}" ;;
+		v) v_flag="${OPTARG}" ;;
 	esac
 done
 
@@ -61,7 +62,14 @@ if [[ -n "$f_flag" ]]; then
 	echo_info "Version $NEW_VERSION loaded from source."
 else
 	cd /tmp/tcpvpn
-	curl -fsSL "$MACOS_RELEASE_URL" -o tcpvpn.tar.gz
+	if [[ -n "v_flag" ]]; then
+		url="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/client-macos.tar.gz"
+	else
+		url="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/client-macos.tar.gz"
+	fi
+	if ! curl -fsSL "$url" -o tcpvpn.tar.gz; then
+		exit_error "Fetch of version $v_flag failed."
+	fi
 	tar xzf tcpvpn.tar.gz
 	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
 	echo_info "Version $NEW_VERSION downloaded."
