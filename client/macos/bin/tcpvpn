@@ -208,8 +208,7 @@ WIREGUARD_PORT='$WIREGUARD_PORT'\nUDP2RAW_PORT='$UDP2RAW_PORT'\nCONFIGURATION_NA
 	# Generate wg.conf
 	echo -ne "[Interface]\nPrivateKey = $USER_PRIVATE_KEY\n\
 Address = $USER_ADDRESS\nDNS = $DNS_SERVERS\nMTU = 1342\n\n\
-PostUp = '$LIB_DIRECTORY/PostUp.sh' '$CONFIGURATION_DIR'\n\
-PostDown = '$LIB_DIRECTORY/PostDown.sh' '$CONFIGURATION_DIR'\n\n\
+PostUp = '$LIB_DIRECTORY/PostUp.sh' '$CONFIGURATION_DIR'\n\n\
 [Peer]\nPublicKey = $SERVER_PUBLIC_KEY\nAllowedIPs = 0.0.0.0/0, ::/0\n\
 Endpoint = 127.0.0.1:$WIREGUARD_PORT\n" > "$CONFIGURATION_DIR"/wg.conf
 
@@ -273,6 +272,7 @@ activate_endpoint () {
 	else
 		echo "$ENDPOINT_ADDRESS" > resolved_addr
 	fi
+	# wg-quick up
 	if ! wg-quick up "wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
@@ -280,7 +280,6 @@ activate_endpoint () {
 	echo $1 > "$APPLICATION_SUPPORT_DIR"/active
 	echo_info "Done!"
 }
-# TODO Move PreUp
 
 
 deactivate_endpoint () {
@@ -291,7 +290,7 @@ deactivate_endpoint () {
 	ACTIVE_VPN=$(cat "$APPLICATION_SUPPORT_DIR"/active)
 	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$ACTIVE_VPN"
 	if [[ ! -f "wg.conf" ]]; then
-		echo_error "No file was found at $(pwd)/wg.conf."
+		echo_error "No file was found at $(pwd)/wg.conf. (this should never happen)"
 		exit 1
 	fi
 	echo_info "Deactivating configuration \"$ACTIVE_VPN\"..."
@@ -299,6 +298,18 @@ deactivate_endpoint () {
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
+	killall udp2raw || true
+	route -n delete default
+	route -n delete -inet6 default
+	# Use the files saved by activate_endpoint to bring back the previous connection
+	# ipv4_gw, ipv6_gw
+	route -n add default $(cat ipv4_gw)
+	if [[ -f ipv6_gw ]]; then
+		route -n add -inet6 default $(cat ipv6_gw)
+	fi
+	route -n delete "$resolved_addr"
+	# Firewall down
+	pfctl -d
 	echo_info "Done!"
 }
 # TODO Move PostDown
