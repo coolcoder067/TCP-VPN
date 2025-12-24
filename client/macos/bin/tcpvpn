@@ -30,6 +30,14 @@ get_wg_iface() {
 	wg show | awk '/interface:/{print $2}'
 }
 
+get_ipv4_gateway() {
+	route -n get default | grep gateway | awk "{print \$2}"
+}
+
+get_ipv6_gateway() {
+	route -n get -inet6 default | grep gateway | awk "{print \$2}"
+}
+
 create_endpoint () {
 	f_flag='' # Argument to read from file
 	while getopts 'f:' flag; do
@@ -200,7 +208,6 @@ WIREGUARD_PORT='$WIREGUARD_PORT'\nUDP2RAW_PORT='$UDP2RAW_PORT'\nCONFIGURATION_NA
 	# Generate wg.conf
 	echo -ne "[Interface]\nPrivateKey = $USER_PRIVATE_KEY\n\
 Address = $USER_ADDRESS\nDNS = $DNS_SERVERS\nMTU = 1342\n\n\
-PreUp = '$LIB_DIRECTORY/PreUp.sh' '$CONFIGURATION_DIR'\n\
 PostUp = '$LIB_DIRECTORY/PostUp.sh' '$CONFIGURATION_DIR'\n\
 PostDown = '$LIB_DIRECTORY/PostDown.sh' '$CONFIGURATION_DIR'\n\n\
 [Peer]\nPublicKey = $SERVER_PUBLIC_KEY\nAllowedIPs = 0.0.0.0/0, ::/0\n\
@@ -219,7 +226,6 @@ activate_endpoint () {
 		echo "Usage: tcpvpn up <name>"
 		exit 1
 	fi
-	
 	if [[ -n $(get_wg_iface) ]]; then
 		echo_error "VPN already active. Use \`tcpvpn down\` to deactivate."
 		exit 1
@@ -228,12 +234,45 @@ activate_endpoint () {
 		echo_error "No internet connection. Cannot connect to VPN."
 		exit 1
 	fi
-	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"
-	if [[ ! -f "wg.conf" ]]; then
+	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"/wg.conf ]]; then
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
 		exit 1
 	fi
 	echo_info "Activating configuration \"$1\"..."
+	# Proceed with activation
+	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"
+	source script_env.cfg
+	# Save ipv4 Gateway
+	ipv4_gw=$(get_ipv4_gateway)
+	if [[ -z ipv4_gw ]]; then
+		echo_error "No ipv4 gateway. (this should never happen)"
+		exit 1
+	fi
+	echo "$ipv4_gw" > ipv4_gw
+	# Save ipv6 gateway if exists
+	ipv6_gw=$(get_ipv6_gateway)
+	if [[ -n ipv6_gw ]]; then
+		echo "$ipv6_gw" > ipv6_gw
+	else
+		rm -f ipv6_gw
+	fi
+	# Resolve any DNS
+	if [[ "$RESOLVE_WITH_DNS" == true ]]; then
+		resolved=$(timeout 1s dig +short "$ENDPOINT_ADDRESS" | head -n 1)
+		if [[ -n "$resolved" ]]; then
+			echo "$resolved" > resolved_addr
+			echo_info "DNS resolution successful."
+		else
+			if [[ -f "resolved_addr" ]]; then
+				echo_info "DNS resolution failed, using cached"
+			else
+				echo_error "Error: Was not able to resolve \"$ENDPOINT_ADDRESS\""
+				exit 1
+			fi
+		fi
+	else
+		echo "$ENDPOINT_ADDRESS" > resolved_addr
+	fi
 	if ! wg-quick up "wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
