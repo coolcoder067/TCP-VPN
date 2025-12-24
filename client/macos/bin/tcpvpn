@@ -273,7 +273,7 @@ activate_endpoint () {
 		echo "$ENDPOINT_ADDRESS" > resolved_addr
 	fi
 	# wg-quick up
-	if ! wg-quick up "wg.conf" > "wg.log" 2>&1; then
+	if ! wg-quick up "./wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
