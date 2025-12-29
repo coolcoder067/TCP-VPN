@@ -35,7 +35,7 @@ get_ipv4_gateway() {
 }
 
 get_ipv6_gateway() {
-	route -n get -inet6 default | grep gateway | awk "{print \$2}"
+	route -n get -inet6 default | grep gateway | awk "{print \$2}" 2>/dev/null
 }
 
 create_endpoint () {
@@ -161,18 +161,6 @@ create_endpoint () {
 		exit 1
 	fi
 
-	# UDP2RAW_PORT
-	if [[ -z "${UDP2RAW_PORT// }" ]]; then
-		echo -ne "Choose an empty port where udp2raw can communicate with the server. (ex. 50002)\n> "
-		read UDP2RAW_PORT
-	else
-		echo_info 'Reading UDP2RAW_PORT from provided file.'
-	fi
-	if [[ -z "${UDP2RAW_PORT// }" ]]; then
-		echo_error "Input cannot be blank."
-		exit 1
-	fi
-
 	# CONFIGURATION_NAME
 	if [[ -z "${CONFIGURATION_NAME// }" ]]; then
 		echo -ne 'What is the name of your new VPN configuration? Keep it short.\n> '
@@ -202,7 +190,7 @@ create_endpoint () {
 	echo -ne "ENDPOINT_ADDRESS='$ENDPOINT_ADDRESS'\nRESOLVE_WITH_DNS='$RESOLVE_WITH_DNS'\n\
 ENDPOINT_PORT='$ENDPOINT_PORT'\nUSER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nSERVER_PUBLIC_KEY='$SERVER_PUBLIC_KEY'\n\
 UDP2RAW_PWD='$UDP2RAW_PWD'\nUSER_ADDRESS='$USER_ADDRESS'\nDNS_SERVERS='$DNS_SERVERS'\n\
-WIREGUARD_PORT='$WIREGUARD_PORT'\nUDP2RAW_PORT='$UDP2RAW_PORT'\nCONFIGURATION_NAME='$CONFIGURATION_NAME'\n\
+WIREGUARD_PORT='$WIREGUARD_PORT'\nCONFIGURATION_NAME='$CONFIGURATION_NAME'\n\
 " > "$CONFIGURATION_DIR"/script_env.cfg
 
 	# Generate wg.conf
@@ -294,25 +282,25 @@ deactivate_endpoint () {
 		exit 1
 	fi
 	echo_info "Deactivating configuration \"$ACTIVE_VPN\"..."
-	if ! wg-quick down "wg.conf" > "wg.log" 2>&1; then
+	if ! wg-quick down "./wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
 	killall udp2raw || true
-	route -n delete default
-	route -n delete -inet6 default
+	route -n delete default >/dev/null 2>&1 || true
+	route -n delete -inet6 default >/dev/null 2>&1 || true
 	# Use the files saved by activate_endpoint to bring back the previous connection
 	# ipv4_gw, ipv6_gw
-	route -n add default $(cat ipv4_gw)
+	route -n add default $(cat ipv4_gw) >/dev/null
 	if [[ -f ipv6_gw ]]; then
-		route -n add -inet6 default $(cat ipv6_gw)
+		route -n add -inet6 default $(cat ipv6_gw) >/dev/null
 	fi
-	route -n delete "$resolved_addr"
+	route -n delete $(cat resolved_addr) >/dev/null
 	# Firewall down
-	pfctl -d
+	pfctl -d >/dev/null 2>&1 || true
 	echo_info "Done!"
 }
-# TODO Move PostDown
+
 
 uninstall () {
 	echo_warn 'This option will uninstall the tool completely, erasing all VPN configurations. Type "Yes" exactly to continue.'

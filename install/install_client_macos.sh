@@ -67,8 +67,9 @@ else
 	else
 		url="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/client-macos.tar.gz"
 	fi
-	if ! curl -fsSL "$url" -o tcpvpn.tar.gz; then
-		exit_error "Fetch of version $v_flag failed."
+	if ! curl -fsL "$url" -o tcpvpn.tar.gz; then
+		echo_error "Fetch of version $v_flag failed."
+		exit 1
 	fi
 	tar xzf tcpvpn.tar.gz
 	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
