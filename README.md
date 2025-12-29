@@ -106,3 +106,9 @@ sudo ip6tables -t nat -A POSTROUTING -s fd42:42:42::/64 -o <interface> -j MASQUE
 This will make all packets coming from 10.0.0.x to have their source IP rewritten to the endpoint's public IP when leaving the interface, so the wider internet will see them as coming from the endpoint’s IP.
 
 The other cause of this problem is a misconfigured firewall, especially if this is hosted in the public cloud. I recommend allowing everything in and out in this case.
+
+## Contribution
+
+Contribution is welcome! I currently need help porting this to Windows. Next on my list is ubuntu server.
+
+Found a bug, or need help? Open an issue.
