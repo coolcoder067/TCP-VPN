@@ -14,7 +14,7 @@ Tested on Mac, may or may not work on Linux. A windows version is coming soon.
 ## Client Installation
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_client_macos.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
 ```
 
 Alternatively, install from source:
