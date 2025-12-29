@@ -340,14 +340,14 @@ delete () {
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
 		exit 1
 	fi
-	echo "Press enter to permanently delete configuration \"$1\", or Ctrl+C to quit. "
-	read
+	read -p "Press enter to permanently delete configuration \"$1\", or Ctrl+C to quit. "
 	rm -rf "endpoints/$1"
+	echo_info "Done!"
 }
 
 list () {
 	cd "$APPLICATION_SUPPORT_DIR"
-	if [[ ! -d "endpoints" ]]; then
+	if [[ ! -d "endpoints" || -z "$( ls -A endpoints )" ]]; then
 		echo "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
 		exit 0
 	fi
