@@ -46,7 +46,12 @@ create_endpoint () {
 		esac
 	done
 	if [[ -n "$f_flag" ]]; then
-		source "$f_flag"
+		if [[ -f "$f_flag" ]]; then
+			source "$f_flag"
+		else
+			echo_error "File provided does not exist."
+			exit 1
+		fi
 	fi
 
 	cd "$APPLICATION_SUPPORT_DIR"
