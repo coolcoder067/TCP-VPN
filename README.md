@@ -21,6 +21,7 @@ Alternatively, install from source:
 
 ```
 git clone https://github.com/coolcoder067/TCP-VPN
+cd TCP-VPN
 chmod +x install/install_client_macos.sh
 sudo install/install_client_macos.sh -f client/macos
 ```

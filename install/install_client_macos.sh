@@ -52,7 +52,7 @@ if [[ $(whoami) != "root" ]]; then
 fi
 
 rm -rf /tmp/tcpvpn
-mkdir /tmp/tcpvpn
+mkdir -p /tmp/tcpvpn
 
 if [[ -n "$f_flag" ]]; then
 	cp -R "$f_flag"/* /tmp/tcpvpn
@@ -98,10 +98,10 @@ else
 fi
 
 # Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
-mkdir "$BIN_DIRECTORY" >/dev/null 2>&1 || true
+mkdir -p "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp -R bin/* "$BIN_DIRECTORY"
 rm -rf "$LIB_DIRECTORY"
-mkdir "$LIB_DIRECTORY"
+mkdir -p "$LIB_DIRECTORY"
 cp -R lib/* "$LIB_DIRECTORY"
 
 # Replace ~/Library/Application\ Support/tcpvpn
@@ -110,7 +110,7 @@ if [[ "$overwrite_conf" -eq 1 ]]; then
 		echo_info "Overwriting configuration directory."
 		rm -rf "$CONF_DIRECTORY"
 	fi
-	mkdir "$CONF_DIRECTORY"
+	mkdir -p "$CONF_DIRECTORY"
 	cp -R configuration/* "$CONF_DIRECTORY"
 else
 	echo_info "Skip overwrite of configuration directory."
@@ -125,7 +125,7 @@ if which udp2raw >/dev/null 2>&1; then
     echo_info "udp2raw already installed."
 else
 	rm -rf /tmp/udp2raw
-	mkdir /tmp/udp2raw
+	mkdir -p /tmp/udp2raw
 	cd /tmp/udp2raw
     curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
     tar xzf udp2raw.tar.gz
