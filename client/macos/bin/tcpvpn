@@ -419,7 +419,7 @@ list () {
 		echo "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
 		exit 0
 	fi
-	echo "${CLR_WHITE}Current configurations:${CLR_RESET}"
+	echo -e "${CLR_WHITE}Current configurations:${CLR_RESET}"
 	for file in "endpoints"/*; do
 		echo "- $(basename "$file")"
 	done

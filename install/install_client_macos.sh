@@ -59,10 +59,18 @@ if [[ -n "$f_flag" ]]; then
 		echo_error "Directory \"$f_flag\" does not exist."
 		exit 1
 	fi
+	if [[ ! -d "$f_flag/../../configuration" ]]; then
+		echo_error "Could not find configuration directory (should be in root of git repo)"
+		exit 1
+	fi
 	cp -R "$f_flag"/* /tmp/tcpvpn
 	cp -R "$f_flag"/../../configuration /tmp/tcpvpn
 	cd /tmp/tcpvpn
-	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
+	if [[ ! -f configuration/version ]]; then
+		echo_error "No version found (this should never happen)"
+		exit 1;
+	fi
+	NEW_VERSION=$(cat configuration/version)
 	echo_info "Version $NEW_VERSION loaded from source."
 else
 	cd /tmp/tcpvpn
@@ -80,7 +88,11 @@ else
 		exit 1
 	fi
 	tar xzf tcpvpn.tar.gz
-	NEW_VERSION=$(cat /tmp/tcpvpn/configuration/version)
+	if [[ ! -f configuration/version ]]; then
+		echo_error "No version found (this should never happen)"
+		exit 1;
+	fi
+	NEW_VERSION=$(cat configuration/version)
 	echo_info "Version $NEW_VERSION downloaded."
 fi
 
