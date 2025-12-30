@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Installs udp2raw at /usr/local/bin, this tool at /usr/local/bin/tcpvpn, 
-# and supporting programs at /usr/local/lib/tcpvpn
+# Installs udp2raw and this tool at /usr/local/bin, 
+# and supporting programs at /usr/local/lib/tcpvpn.
 # Configurations will be saved at ~/Library/Application\ Support/tcpvpn/endpoints
 
 # 1. Check for version incompatibility
@@ -35,6 +35,8 @@ echo_error() {
 
 set -e # Fail on error, just in case
 
+
+# Read arguments
 f_flag='' # Argument to read from file
 v_flag=''
 while getopts ':f:v:' flag; do
@@ -54,6 +56,7 @@ fi
 rm -rf /tmp/tcpvpn
 mkdir -p /tmp/tcpvpn
 
+# Copy files to /tmp/tcpvpn
 if [[ -n "$f_flag" ]]; then
 	if [[ ! -d "$f_flag" ]]; then
 		echo_error "Directory \"$f_flag\" does not exist."
@@ -103,6 +106,11 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
+		if [[ -z "$f_flag" && "$NEW_VERSION" -eq "$OLD_VERSION" ]]; then # Installing from github and versions are the same
+			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
+			echo_info "Done!"
+			exit 0
+		fi
 		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
 			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version. Proceeding will not overwrite the current configuration."
 			overwrite_conf=0
