@@ -23,18 +23,26 @@ jobs:
           tar -czf client-macos.tar.gz -C client/macos .
 
       - name: Set release metadata
+        id: meta
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME}"
+            if [[ "$VERSION" == *-rc* ]]; then
+              PRERELEASE=true
+            else
+              PRERELEASE=false
+            fi
           else
             VERSION="dev-$(date -u +'%Y%m%d-%H%M%S')"
           fi
 
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Create github release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.version }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
           files: client-macos.tar.gz
           body: Files here are automatically downloaded by the install script. Don't try to install them yourself. If you would like to install from source, follow the directions in README.md instead.
