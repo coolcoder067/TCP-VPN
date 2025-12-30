@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Most of this is the exact same as macos client.
+
 # Directory structure
 
 # /usr/local/bin/
@@ -10,25 +12,16 @@
 # 	tcpvpn/
 # 		PostUp.sh
 
-# ~/Library/Application\ Support/tcpvpn/
+# ~/.config/tcpvpn/
 # 	compatible_versions
 # 	version
-# 	endpoints/
-# 		endpoint1/
-# 			wg.conf
-# 			script_env.cfg
-# 			wg.log
-# 			udp2raw.log
-# 			ipv4_gw
-# 			ipv6_gw
-
-
-# 1. Check for version incompatibility
-# 2. Get from github
-# 3. Install udp2raw
-# 4. Copy to /usr/local/bin
-# 5. Copy to /usr/local/lib
-
+# 	users/
+# 		user1/
+# 			?
+# 	wg.conf
+# 	script_env.cfg
+# 	wg.log
+# 	udp2raw.log
 
 
 CLR_WHITE="\033[1;37m"
@@ -38,22 +31,21 @@ CLR_RESET="\033[0m"
 
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
-CONF_DIRECTORY="$HOME/Library/Application Support/tcpvpn"
+CONF_DIRECTORY="$HOME/.config/tcpvpn"
 
 echo_info() {
-	echo -e "${CLR_WHITE}[Info] $*${CLR_RESET}"
+  echo -e "${CLR_WHITE}[Info] $*${CLR_RESET}"
 }
 
 echo_warn() {
-	echo -e "${CLR_YELLOW}[Warn] $*${CLR_RESET}"
+  echo -e "${CLR_YELLOW}[Warn] $*${CLR_RESET}"
 }
 
 echo_error() {
-	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+  echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
 }
 
 set -e # Fail on error, just in case
-
 
 # Read arguments
 f_flag='' # Argument to read from file
@@ -62,8 +54,8 @@ while getopts ':f:v:' flag; do
 	case "$flag" in
 		f) f_flag="$OPTARG" ;;
 		v) v_flag="$OPTARG" ;;
-		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>] [-v <version>]"; exit 1;;
-		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>] [-v <version>]"; exit 1;;
+		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>] [-v <version>]"; exit 1;;
+		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>] [-v <version>]"; exit 1;;
 	esac
 done
 
@@ -72,10 +64,14 @@ if [[ $(whoami) != "root" ]]; then
   exit 1
 fi
 
+# 
+# TODO
+# Error if not debian, ubuntu, etc
+# 
+
 rm -rf /tmp/tcpvpn
 mkdir -p /tmp/tcpvpn
 
-# Copy files to /tmp/tcpvpn
 if [[ -n "$f_flag" ]]; then
 	if [[ ! -d "$f_flag" ]]; then
 		echo_error "Directory \"$f_flag\" does not exist."
@@ -122,6 +118,7 @@ else
 fi
 
 
+
 # Check for existing installation
 overwrite_conf=1
 if [[ -d "$CONF_DIRECTORY" ]]; then
@@ -147,6 +144,7 @@ else
 	echo_info "No existing installation of the tool was found."
 fi
 
+
 # Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
 mkdir -p "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp -R bin/* "$BIN_DIRECTORY"
@@ -154,7 +152,7 @@ rm -rf "$LIB_DIRECTORY"
 mkdir -p "$LIB_DIRECTORY"
 cp -R lib/* "$LIB_DIRECTORY"
 
-# Replace ~/Library/Application\ Support/tcpvpn
+# Replace ~/.config/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
 	if [[ -d $CONF_DIRECTORY ]]; then
 		echo_info "Overwriting configuration directory."
@@ -170,34 +168,41 @@ fi
 
 rm -rf /tmp/tcpvpn
 
+
 # Install udp2raw
 if which udp2raw >/dev/null 2>&1; then
-	echo_info "udp2raw already installed."
+    echo_info "udp2raw already installed."
 else
 	rm -rf /tmp/udp2raw
 	mkdir -p /tmp/udp2raw
 	cd /tmp/udp2raw
-	curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
-	tar xzf udp2raw.tar.gz
-	ARCH=$(uname -m)
-	if [[ "$ARCH" = "arm64" ]]; then # Apple M1, etc
-		cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw"
-	else
-		if [[ "$ARCH" = "x86_64" ]]; then
-			cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw"
-		else
-			echo_error "Arch could not be detected (this should never happen)"
-			exit 1
-		fi
-	fi
-	rm -rf /tmp/udp2raw
-	echo_info "Installed udp2raw."
+
+		# TODO Wrong URL (multiplatform not needed)
+    curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
+    tar xzf udp2raw.tar.gz
+
+    # TODO Wrong Arch command
+    ARCH=$(uname -m)
+    if [[ "$ARCH" = "arm64" ]]; then # Apple M1, etc
+    	cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw"
+    else
+    	if [[ "$ARCH" = "x86_64" ]]; then
+    		cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw"
+    	else
+    		echo_error "Arch could not be detected (this should never happen)"
+    		exit 1
+    	fi
+    fi
+    rm -rf /tmp/udp2raw
+    echo_info "Installed udp2raw."
 fi
+
 
 # Prompt user to install wireguard-tools
 if which wg-quick >/dev/null 2>&1; then
 	echo_info "wg-quick already installed."
 else
+	# TODO wrong installation command (apt instead)
 	echo_warn "Dependency \`wg-quick\` not found. Install with \`brew install wireguard-tools\`."
 fi
 

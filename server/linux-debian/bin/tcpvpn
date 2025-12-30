@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Usage:
+# Manage users
+#     tcpvpn adduser <name>
+#     tcpvpn revoke <name>
+#     tcpvpn print <name>
+#     tcpvpn list
+#
+# Manage configuration
+#     tcpvpn configure
+#
+# Manage the installation
+#     tcpvpn version
+#     tcpvpn update
+#     tcpvpn uninstall
+
+BIN_DIRECTORY="/usr/local/bin"
+LIB_DIRECTORY="/usr/local/lib/tcpvpn"
+CONF_DIRECTORY="$HOME/.config/tcpvpn"
+
+CLR_WHITE="\033[1;37m"
+CLR_YELLOW="\033[1;33m"
+CLR_RED="\033[1;31m"
+CLR_RESET="\033[0m"
+
+
+echo_info() {
+	echo -e "${CLR_WHITE}[Info] $*${CLR_RESET}"
+}
+
+echo_warn() {
+	echo -e "${CLR_YELLOW}[Warn] $*${CLR_RESET}"
+}
+
+echo_error() {
+	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+}
+
+
+# Main functions
+add_user() {
+	
+}
+
+
+set -e
+
+if [[ $(whoami) != "root" ]]; then
+	echo_error "This script must be run as root."
+	exit 1
+fi
+
+case "$1" in
+	adduser) shift; add_user "$@";;
+	revoke) shift; revoke_user "$@";;
+	print) shift; print_user "$@";;
+	list) shift; list_users "$@";;
+	configure) shift; configure "$@";;
+	version) shift; print_version "$@";;
+	update) shift; update "$@";;
+	uninstall) shift; uninstall "$@";;
+	*) 
+		if [[ -n "$1" ]]; then
+			echo_error "Unknown command \"$1\"."
+		fi
+		echo -e "\
+${CLR_WHITE}\
+Usage:\n\
+Manage users\n\
+${CLR_RESET}\
+    tcpvpn adduser <name>\n\
+    tcpvpn revoke <name>\n\
+    tcpvpn print <name>\n\
+    tcpvpn list\n\
+${CLR_WHITE}\
+Manage configuration\n\
+${CLR_RESET}\
+    tcpvpn configure\n\
+${CLR_WHITE}\
+Manage the installation\n\
+${CLR_RESET}\
+    tcpvpn version\n\
+    tcpvpn update\n\
+    tcpvpn uninstall\n"
+    	exit 1
+    	;;
+esac
+
+
