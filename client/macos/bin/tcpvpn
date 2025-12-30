@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# TODO add `update` option
+#
+# Usage:
+# Manage configurations
+#     tcpvpn create [-f <filepath>]
+#     tcpvpn delete <name>
+#     tcpvpn export <name>
+#     tcpvpn list
+#
+# Activate/deactivate the VPN
+#     tcpvpn up <name>
+#     tcpvpn down <name>
+#
+# Manage the installation
+#     tcpvpn version
+#     tcpvpn update
+#     tcpvpn uninstall
+
 APPLICATION_SUPPORT_DIR=~/"Library/Application Support/tcpvpn"
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
@@ -40,9 +58,11 @@ get_ipv6_gateway() {
 
 create_endpoint () {
 	f_flag='' # Argument to read from file
-	while getopts 'f:' flag; do
+	while getopts ':f:' flag; do
 		case "${flag}" in
-			f) f_flag="${OPTARG}" ;;
+			f) f_flag="$OPTARG" ;;
+			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn create [-f <filename>]"; exit 1 ;;
+			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn create [-f <filename>]"; exit 1 ;;
 		esac
 	done
 	if [[ -n "$f_flag" ]]; then
@@ -182,7 +202,7 @@ create_endpoint () {
 	
 	CONFIGURATION_DIR="$APPLICATION_SUPPORT_DIR"/endpoints/"$CONFIGURATION_NAME"
 	if [[ -d "$CONFIGURATION_DIR" ]]; then
-		echo_warn "This will overwrite the contents of \"$CONFIGURATION_DIR\"."
+		echo_warn "A configuration with name \"$CONFIGURATION_NAME\" already exists. Proceeding will overwrite that configuration."
 	fi
 	echo 'Press enter to confirm the details above, or CTRL+C to quit.'
 	read
@@ -205,7 +225,7 @@ PostUp = '$LIB_DIRECTORY/PostUp.sh' '$CONFIGURATION_DIR'\n\n\
 [Peer]\nPublicKey = $SERVER_PUBLIC_KEY\nAllowedIPs = 0.0.0.0/0, ::/0\n\
 Endpoint = 127.0.0.1:$WIREGUARD_PORT\n" > "$CONFIGURATION_DIR"/wg.conf
 
-	echo -e "Generated files at \"$CONFIGURATION_DIR\".\nUse \`sudo tcpvpn up $CONFIGURATION_NAME\` to activate your VPN."
+	echo_info "Generated files at \"$CONFIGURATION_DIR\".\nUse \`sudo tcpvpn up $CONFIGURATION_NAME\` to activate your VPN."
 }
 
 # Logic for activation and deactivation
@@ -215,7 +235,13 @@ Endpoint = 127.0.0.1:$WIREGUARD_PORT\n" > "$CONFIGURATION_DIR"/wg.conf
 
 activate_endpoint () {
 	if [[ -z "$1" ]]; then
-		echo "Usage: tcpvpn up <name>"
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn up <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn up <name>"
 		exit 1
 	fi
 	if [[ -n $(get_wg_iface) ]]; then
@@ -223,7 +249,7 @@ activate_endpoint () {
 		exit 1
 	fi
 	if [[ -z $(get_default_iface) ]]; then
-		echo_error "No internet connection. Cannot connect to VPN."
+		echo_error "No Internet connection. Cannot connect to VPN."
 		exit 1
 	fi
 	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"/wg.conf ]]; then
@@ -276,6 +302,11 @@ activate_endpoint () {
 
 
 deactivate_endpoint () {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn down"
+		exit 1
+	fi
 	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z $(get_wg_iface) ]]; then
 		echo_error "The VPN is not active. Use \`tcpvpn up <name>\` to activate."
 		exit 1
@@ -308,6 +339,11 @@ deactivate_endpoint () {
 
 
 uninstall () {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn uninstall"
+		exit 1
+	fi
 	echo_warn 'This option will uninstall the tool completely, erasing all VPN configurations. Type "Yes" exactly to continue.'
 	read -p "> " YES_OPTION
 	if [[ "$YES_OPTION" = "Yes" ]]; then
@@ -330,7 +366,17 @@ uninstall () {
 	fi
 }
 
-export_conf () {
+export_conf () { # `export` is reserved
+	if [[ -z "$1" ]]; then
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn export <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn export <name>"
+		exit 1
+	fi
 	cd "$APPLICATION_SUPPORT_DIR"
 	if [[ ! -f "endpoints/$1/script_env.cfg" ]]; then
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
@@ -340,6 +386,16 @@ export_conf () {
 }
 
 delete () {
+	if [[ -z "$1" ]]; then
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn delete <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn delete <name>"
+		exit 1
+	fi
 	cd "$APPLICATION_SUPPORT_DIR"
 	if [[ ! -d "endpoints/$1" ]]; then
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
@@ -351,6 +407,11 @@ delete () {
 }
 
 list () {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn list"
+		exit 1
+	fi
 	cd "$APPLICATION_SUPPORT_DIR"
 	if [[ ! -d "endpoints" || -z "$( ls -A endpoints )" ]]; then
 		echo "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
@@ -362,12 +423,27 @@ list () {
 	done
 }
 
+version () {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn version"
+		exit 1
+	fi
+	cd "$APPLICATION_SUPPORT_DIR"
+	if [[ ! -f "version" ]]; then
+		echo_error "No version found (this should never happen)"
+	fi
+	echo_info "TCP-VPN version $(cat version)"
+}
+
+
+
 # Main logic
 
 set -e
 
 if [[ $(whoami) != "root" ]]; then
-	echo "Error: This script must be run as root."
+	echo_error "This script must be run as root."
 	exit 1
 fi
 
@@ -379,15 +455,31 @@ case "$1" in
 	export) shift; export_conf "$@";;
 	delete) shift; delete "$@";;
 	list) shift; list "$@";;
+	version) shift; version "$@";;
 	*)
+		if [[ -n "$1" ]]; then
+			echo_error "Unknown command \"$1\"."
+		fi
 		echo -e "\
-Usage: tcpvpn create [-f <filepath>]\n\
-       tcpvpn up <name>\n\
-       tcpvpn down\n\
-       tcpvpn uninstall\n\
-       tcpvpn export <name>\n\
-       tcpvpn delete <name>\n\
-       tcpvpn list"
+${CLR_WHITE}\
+Usage:\n\
+Manage configurations\n\
+${CLR_RESET}\
+    tcpvpn create [-f <filepath>]\n\
+    tcpvpn delete <name>\n\
+    tcpvpn export <name>\n\
+    tcpvpn list\n\
+${CLR_WHITE}\
+Activate/deactivate the VPN\n\
+${CLR_RESET}\
+    tcpvpn up <name>\n\
+    tcpvpn down <name>\n\
+${CLR_WHITE}\
+Manage the installation\n\
+${CLR_RESET}\
+    tcpvpn version\n\
+    tcpvpn update\n\
+    tcpvpn uninstall"
 		exit 1
 		;;
 esac

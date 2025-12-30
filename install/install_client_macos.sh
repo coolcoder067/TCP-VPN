@@ -4,8 +4,6 @@
 # and supporting programs at /usr/local/lib/tcpvpn
 # Configurations will be saved at ~/Library/Application\ Support/tcpvpn/endpoints
 
-# ~/Library/Application\ Support/tcpvpn/endpoints/levi example endpoint location
-
 # 1. Check for version incompatibility
 # 2. Get from github
 # 3. Install udp2raw
