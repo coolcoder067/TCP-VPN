@@ -461,7 +461,7 @@ update () {
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
 	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
-	bash -c "$script" _ "${args[@]}" # Pass all arguments (for example -v)
+	echo "$script" | bash -s _ "${args[@]}" # Pass all arguments (for example -v)
 }
 
 
