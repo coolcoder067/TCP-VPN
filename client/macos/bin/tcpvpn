@@ -454,14 +454,15 @@ update () {
 		echo_error "Directory \"$f_flag\" does not exist."
 		exit 1
 	fi
-	# curl -fsL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
+	# Fetch latest installer
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
 	fi
+	# Pass arguments
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
 	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
-	echo "$script" | bash -s _ "${args[@]}" # Pass all arguments (for example -v)
+	echo "$script" | bash -s -- "${args[@]}" # Pass all arguments (for example -v)
 }
 
 
