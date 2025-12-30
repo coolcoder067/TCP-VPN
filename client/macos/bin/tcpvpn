@@ -22,6 +22,8 @@ APPLICATION_SUPPORT_DIR=~/"Library/Application Support/tcpvpn"
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
 
+INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh"
+
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
 CLR_RED="\033[1;31m"
@@ -436,6 +438,15 @@ version () {
 	echo_info "TCP-VPN version $(cat version)"
 }
 
+update () {
+	# "Too many arguments" is handled in the install script
+	# curl -fsL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
+	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
+		echo_error "Failed to fetch install script."
+	fi
+	bash -c "$script" _ "$@" # Pass all arguments (-v)
+}
+
 
 
 # Main logic
@@ -456,6 +467,7 @@ case "$1" in
 	delete) shift; delete "$@";;
 	list) shift; list "$@";;
 	version) shift; version "$@";;
+	update) shift; update "$@";;
 	*)
 		if [[ -n "$1" ]]; then
 			echo_error "Unknown command \"$1\"."
