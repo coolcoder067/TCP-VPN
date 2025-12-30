@@ -419,7 +419,7 @@ list () {
 		echo "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
 		exit 0
 	fi
-	echo "Current configurations:"
+	echo "${CLR_WHITE}Current configurations:${CLR_RESET}"
 	for file in "endpoints"/*; do
 		echo "- $(basename "$file")"
 	done
@@ -439,12 +439,29 @@ version () {
 }
 
 update () {
-	# "Too many arguments" is handled in the install script
+	# Process arguments
+	f_flag='' # Argument to read from file
+	v_flag=''
+	while getopts ':f:v:' flag; do
+		case "$flag" in
+			f) f_flag="$OPTARG" ;;
+			v) v_flag="$OPTARG" ;;
+			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
+			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
+		esac
+	done
+	if [[ -n "$f_flag" && ! -d "$f_flag" ]]; then
+		echo_error "Directory \"$f_flag\" does not exist."
+		exit 1
+	fi
 	# curl -fsL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
 	fi
-	bash -c "$script" _ "$@" # Pass all arguments (-v)
+	args=()
+	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
+	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
+	bash -c "$script" _ "${args[@]}" # Pass all arguments (for example -v)
 }
 
 
