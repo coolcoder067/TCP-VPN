@@ -73,6 +73,9 @@ if [[ -n "$f_flag" ]]; then
 		echo_error "No version found (this should never happen)"
 		exit 1;
 	fi
+	if [[ -n "$v_flag" ]]; then
+		echo_warn "Version flag -v was ignored because -f was defined."
+	fi
 	NEW_VERSION=$(cat configuration/version)
 	echo_info "Version $NEW_VERSION loaded from source."
 else
