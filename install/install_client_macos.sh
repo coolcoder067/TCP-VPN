@@ -109,7 +109,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
-		if [[ -z "$f_flag" && "$NEW_VERSION" -eq "$OLD_VERSION" ]]; then # Installing from github and versions are the same
+		if [[ -z "$f_flag" && "$NEW_VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
 			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
 			echo_info "Done!"
 			exit 0
