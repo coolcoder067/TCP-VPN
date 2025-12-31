@@ -179,17 +179,12 @@ else
 	cd /tmp/udp2raw
 	curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
 	tar xzf udp2raw.tar.gz
-	ARCH=$(uname -m)
-	if [[ "$ARCH" = "arm64" ]]; then # Apple M1, etc
-		cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw"
-	else
-		if [[ "$ARCH" = "x86_64" ]]; then
-			cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw"
-		else
-			echo_error "Arch could not be detected (this should never happen)"
-			exit 1
-		fi
-	fi
+	# Detect architecture and copy appropriate binary
+	case $(uname -m) in
+		arm64) cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw" ;;
+		x86_64) cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw" ;;
+		*) echo_error "Arch could not be detected (this should never happen)"; exit 1
+	esac
 	rm -rf /tmp/udp2raw
 	echo_info "Installed udp2raw."
 fi
@@ -204,6 +199,6 @@ fi
 chmod -R 755 "$LIB_DIRECTORY"/*
 chmod -R 755 "$BIN_DIRECTORY"/*
 
-echo_info "Successfully installed the tool."
+echo_info "Installation was successful."
 exit 0
 
