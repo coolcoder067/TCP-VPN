@@ -132,6 +132,8 @@ up() {
 	fi
 
 	echo_info "VPN successfully up!"
+
+	# TODO add state file that up and down recognize
 }
 
 
@@ -166,6 +168,7 @@ print_user() {
 	cd "$CONF_DIRECTORY"
 	if [[ ! -f "users"/$1 ]]; then
 		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
+		exit 1
 	fi
 	if [[ ! -f script_env.cfg ]]; then
 		echo_error "The VPN has not been configured. Do so with \`tcpvpn configure\`."
@@ -222,6 +225,7 @@ add_user() {
 	done
 	if [[ -z "$ADDR_NUMBER" ]]; then
 		echo_error "No IP could be located. (This should only happen if you have >200 users)"
+		exit 1
 	fi
 	mkdir -p "$CONF_DIRECTORY/users" >/dev/null 2>&1 || true
 	echo -ne "USER_PUBLIC_KEY='$USER_PUBLIC_KEY'\nUSER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nADDR_NUMBER='$ADDR_NUMBER'" \
@@ -249,6 +253,7 @@ revoke_user() {
 	cd "$CONF_DIRECTORY"
 	if [[ ! -f "users"/$1 ]]; then
 		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
+		exit 1
 	fi
 	read -p "Press enter to permanently delete user \"$1\", or Ctrl+C to quit. "
 	rm -rf "users/$1"
@@ -283,6 +288,7 @@ version() {
 	cd "$CONF_DIRECTORY"
 	if [[ ! -f "version" ]]; then
 		echo_error "No version found (this should never happen)"
+		exit 1
 	fi
 	echo_info "TCP-VPN version $(cat version)"
 }
@@ -307,6 +313,7 @@ update() {
 	# Fetch latest installer
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
+		exit 1
 	fi
 	# Pass arguments
 	args=()
@@ -359,6 +366,8 @@ case "$1" in
 	revoke) shift; revoke_user "$@";;
 	print) shift; print_user "$@";;
 	list) shift; list_users "$@";;
+	up) shift; up "$@";;
+	down) shift; down "$@";;
 	configure) shift; configure "$@";;
 	version) shift; version "$@";;
 	update) shift; update "$@";;
@@ -386,8 +395,8 @@ ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\
     tcpvpn version\n\
-    tcpvpn update\n\
-    tcpvpn uninstall\n"
+    tcpvpn update [-f <source_directory>] [-v <version>]\n\
+    tcpvpn uninstall"
     	exit 1
     	;;
 esac

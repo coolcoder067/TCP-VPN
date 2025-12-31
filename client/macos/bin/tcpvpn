@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# TODO add `update` option
 #
 # Usage:
 # Manage configurations
@@ -441,6 +440,7 @@ version () {
 	cd "$APPLICATION_SUPPORT_DIR"
 	if [[ ! -f "version" ]]; then
 		echo_error "No version found (this should never happen)"
+		exit 1
 	fi
 	echo_info "TCP-VPN version $(cat version)"
 }
@@ -465,6 +465,7 @@ update () {
 	# Fetch latest installer
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
+		exit 1
 	fi
 	# Pass arguments
 	args=()
