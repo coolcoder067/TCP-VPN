@@ -17,10 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Create MacOS tar.gz
+      - name: Create tar.gz's
         run: |
           cp -R configuration client/macos
           tar -czf client-macos.tar.gz -C client/macos .
+          cp -R configuration server/linux-debian
+          tar -czf server-linux-debian.tar.gz -C server/linux-debian .
 
       - name: Set release metadata
         id: meta
@@ -44,5 +46,7 @@ jobs:
         with:
           tag_name: ${{ steps.meta.outputs.version }}
           prerelease: ${{ steps.meta.outputs.prerelease }}
-          files: client-macos.tar.gz
+          files: |
+            client-macos.tar.gz
+            server-linux-debian.tar.gz
           body: Files here are automatically downloaded by the install script. Don't try to install them yourself. If you would like to install from source, follow the directions in README.md instead.
