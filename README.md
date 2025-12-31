@@ -34,7 +34,17 @@ sudo install/install_client_macos.sh -f client/macos
 
 ## Server Installation
 
-Coming Soon! See [v1.1.0](https://github.com/coolcoder067/TCP-VPN/tree/v1.1.0) for manual installation on the server side.
+Tested on Ubuntu Server 24.04 LTS
+
+```
+curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh | sudo bash
+```
+
+Install pre-release versions:
+
+```
+curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_server_linux_debian.sh | sudo bash -s -- -v <prerelease_version>
+```
 
 ## Quick Start
 
