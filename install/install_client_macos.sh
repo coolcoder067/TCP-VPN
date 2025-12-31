@@ -72,6 +72,12 @@ if [[ $(whoami) != "root" ]]; then
   exit 1
 fi
 
+# Make sure macOS
+if [[ "$(uname)" != "Darwin" ]]; then
+	echo_error "This install script is intended for MacOS only. Please choose the correct installer."
+	exit 1
+fi
+
 rm -rf /tmp/tcpvpn
 mkdir -p /tmp/tcpvpn
 
