@@ -14,13 +14,13 @@ Tested on Mac, may or may not work on Linux. A windows version is coming soon.
 ## Client Installation
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash -i
+curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
 ```
 
 Install pre-release versions:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_client_macos.sh | sudo bash -i -s -- -v <prerelease_version>
+curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_client_macos.sh | sudo bash -s -- -v <prerelease_version>
 ```
 
 Alternatively, install from source:

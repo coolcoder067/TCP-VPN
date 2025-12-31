@@ -244,7 +244,7 @@ fi
 
 # TODO start automatically on reboot
 
-echo_info "Installation was successful. Running \`tcpvpn configure\`..."
-tcpvpn configure
+echo_info "Installation was successful."
+echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."
 exit 0
 
