@@ -72,7 +72,7 @@ if [[ $(whoami) != "root" ]]; then
 fi
 
 # Make sure debian
-if ! grep -i '^ID_LIKE=.*debian' /etc/os-release; then
+if ! grep -iq '^ID_LIKE=.*debian' /etc/os-release; then
 	echo_error "This install script is intended for debian-like systems only (ubuntu, rasp. pi, etc). Please choose the correct installer."
 	exit 1
 fi
@@ -171,6 +171,7 @@ else
 	cp configuration/compatible_versions "$CONF_DIRECTORY/compatible_versions"
 fi
 
+cd
 rm -rf /tmp/tcpvpn
 
 
@@ -222,8 +223,8 @@ chmod -R 755 "$BIN_DIRECTORY"/tcpvpn
 chmod -R 755 "$BIN_DIRECTORY"/udp2raw >/dev/null 2>&1 || true
 
 # Allow packet forwarding
-sysctl -w net.ipv4.ip_forward=1
-sysctl -w net.ipv6.conf.all.forwarding=1
+sysctl -w net.ipv4.ip_forward=1 >/dev/null
+sysctl -w net.ipv6.conf.all.forwarding=1 >/dev/null
 echo_info "Allowed packet forwarding via sysctl."
 
 if which iptables >/dev/null 2>&1; then
