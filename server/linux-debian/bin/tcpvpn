@@ -1,23 +1,32 @@
 #!/bin/bash
 
 # Usage:
-# Manage users
+# Manage configuration
 #     tcpvpn adduser <name>
 #     tcpvpn revoke <name>
 #     tcpvpn print <name>
 #     tcpvpn list
-#
-# Manage configuration
 #     tcpvpn configure
+#
+# VPN up/down
+#     tcpvpn up
+#     tcpvpn down
 #
 # Manage the installation
 #     tcpvpn version
 #     tcpvpn update
 #     tcpvpn uninstall
 
+INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh"
+
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
-CONF_DIRECTORY="$HOME/.config/tcpvpn"
+if [[ -n "$SUDO_USER" ]]; then
+  USER_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+else
+  USER_HOME="$HOME"
+fi
+CONF_DIRECTORY="$USER_HOME/.config/tcpvpn"
 
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
@@ -39,11 +48,305 @@ echo_error() {
 
 
 # Main functions
-add_user() {
+configure() {
+	if [[ -n "$1" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn configure"
+		exit 1
+	fi
+	# Must generate:
+	# Keys
+	# Internal port
+	# External port
+	# udp2raw password
+	# Server internal IP address
 	
+	# Client stuff is handled by add_user, and is located in users/*	
+
+	cd "$CONF_DIRECTORY"
+	if [[ -f script_env.cfg ]]; then
+		echo_warn "Continuing will overwrite the existing configuration, causing all user configurations to break until they get the new one."
+	fi
+
+	SERVER_PRIVATE_KEY=$(wg genkey)
+	SERVER_PUBLIC_KEY=$(echo "$SERVER_PRIVATE_KEY" | wg pubkey)
+
+	echo -ne 'Choose a port for internal communication between wireguard and udp2raw. (ex. 50001)\n> '
+	read INTERNAL_PORT
+	if [[ -z "${INTERNAL_PORT// }" ]]; then
+		echo_error "Input cannot be blank."
+		exit 1
+	fi
+
+	echo -ne 'Choose an outward-facing port for communication with clients. (443 recommended to blend in with HTTPS)\n> '
+	read LISTEN_PORT
+	if [[ -z "${LISTEN_PORT// }" ]]; then
+		echo_error "Input cannot be blank."
+		exit 1
+	fi
+
+	UDP2RAW_PWD=$(openssl rand -base64 20)
+
+	SERVER_ADDRESS="10.0.0.1/24, fd42:42:42::1/64"
+
+	echo -ne "SERVER_PRIVATE_KEY='$SERVER_PRIVATE_KEY'\nSERVER_PUBLIC_KEY='$SERVER_PUBLIC_KEY'\nINTERNAL_PORT='$INTERNAL_PORT'\n\
+LISTEN_PORT='$LISTEN_PORT'\nUDP2RAW_PWD='$UDP2RAW_PWD'\nSERVER_ADDRESS='$SERVER_ADDRESS'" > script_env.cfg
+
+	echo_info "Updated configuration."
+	echo_info "Done."
 }
 
 
+up() {
+	if [[ -n "$1" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn up"
+		exit 1
+	fi
+	# Generate wg.conf
+	cd "$CONF_DIRECTORY"
+	if [[ ! -f script_env.cfg ]]; then
+		echo_error "The VPN has not been configured. Do so with \`tcpvpn configure\`."
+		exit 1
+	fi
+	source script_env.cfg # This contains everything we need to generate wg.conf
+	# No PostUp, etc. because that can be handled here and in down()
+	echo -ne "[Interface]\nPrivateKey = $SERVER_PRIVATE_KEY\nAddress=$SERVER_ADDRESS\nListenPort=$INTERNAL_PORT\nMTU=1342\n" > wg.conf
+	for file in "users"/*; do
+		source "$file"
+		echo -ne "\n[Peer]\nPublicKey = $USER_PUBLIC_KEY\nAllowedIPs = 10.0.0.$ADDR_NUMBER/24, fd42:42:42::$ADDR_NUMBER/64\n" >> wg.conf
+	done
+
+	# Bring up udp2raw
+	# $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+') local ip
+	# $(ip route | grep '^default' | grep -oP 'dev \K\S+') default iface
+	udp2raw -s -l $(ip route | grep '^default' | grep -oP 'dev \K\S+'):$LISTEN_PORT -r 127.0.0.1:$INTERNAL_PORT \
+		-k $UDP2RAW_PWD -a --dev $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+') \
+		--cipher-mode xor --auth-mode simple > "udp2raw.log" 2>&1 &
+
+
+	# Bring up wireguard
+	if ! wg-quick up "./wg.conf" > "wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
+		exit 1
+	fi
+
+	echo_info "VPN successfully up!"
+}
+
+
+down() {
+	if [[ -n "$1" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn down"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	# Bring down wireguard
+	if ! wg-quick down "./wg.conf" > "wg.log" 2>&1; then
+		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
+		exit 1
+	fi
+	killall udp2raw || true
+	echo "VPN successfully down."
+}
+
+
+print_user() {
+	if [[ -z "$1" ]]; then
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn print <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn print <name>"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ ! -f "users"/$1 ]]; then
+		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
+	fi
+	if [[ ! -f script_env.cfg ]]; then
+		echo_error "The VPN has not been configured. Do so with \`tcpvpn configure\`."
+		exit 1
+	fi
+	source script_env.cfg
+	source "users"/$1
+	echo -ne "ENDPOINT_PORT='$LISTEN_PORT'\nSERVER_PUBLIC_KEY='$SERVER_PUBLIC_KEY'\nUDP2RAW_PWD='$UDP2RAW_PWD'\n\
+USER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nUSER_ADDRESS='10.0.0.$ADDR_NUMBER/24, fd42:42:42::$ADDR_NUMBER/64'"
+}
+
+
+add_user() {
+	if [[ -z "$1" ]]; then
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn adduser <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn adduser <name>"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ -f "users/$1" ]]; then
+		echo_warn "A user with name \"$1\" already exists. Proceeding will create a new set of keys for that user that must be used to authenticate."
+		echo 'Press enter to confirm the details above, or CTRL+C to quit.'
+		read
+		rm -rf "users/$1"
+	fi
+	# wg genkey | tee privatekey | wg pubkey > publickey 
+	USER_PRIVATE_KEY=$(wg genkey)
+	USER_PUBLIC_KEY=$(echo "$USER_PRIVATE_KEY" | wg pubkey)
+	# Allocate IP Addresses: 2-254 are available
+	addrs_used=()
+	for file in "users"/*; do
+		addrs_used+=($(sed -n "s/^ADDR_NUMBER=\(.*\)/\1/p" "$file"))
+	done
+	# Find the least used one, and exit if none are available
+	ADDR_NUMBER=""
+	for i in {2..254}; do
+		# Try this number i
+		found=0
+		for number in "${addrs_used[@]}"; do
+			if [[ "$i" == "$number" ]]; then
+				found=1
+				break
+			fi
+		done
+		if [[ "$found" == 0 ]]; then
+			ADDR_NUMBER="$i"
+			break
+		fi
+	done
+	if [[ -z "$ADDR_NUMBER" ]]; then
+		echo_error "No IP could be located. (This should only happen if you have >200 users)"
+	fi
+	mkdir -p "$CONF_DIRECTORY/users" >/dev/null 2>&1 || true
+	echo -ne "USER_PUBLIC_KEY='$USER_PUBLIC_KEY'\nUSER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nADDR_NUMBER='$ADDR_NUMBER'" \
+> "users/$1"
+	# Restart wireguard
+	echo_info "Restarting the VPN..."
+	down
+	up
+	echo_info "Done! Running \`tcpvpn print \"$1\"\`:\n"
+	print_user "$1"
+}
+
+
+revoke_user() {
+	if [[ -z "$1" ]]; then
+		echo_error "Argument <name> required"
+		echo_info "Usage: tcpvpn revoke <name>"
+		exit 1
+	fi
+	if [[ -n "$2" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn revoke <name>"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ ! -f "users"/$1 ]]; then
+		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
+	fi
+	read -p "Press enter to permanently delete user \"$1\", or Ctrl+C to quit. "
+	rm -rf "users/$1"
+	echo_info "Done!"
+}
+
+
+list_users() {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn list"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ ! -d "users" || -z "$( ls -A users )" ]]; then
+		echo_info "No users currently exist. Use \`tcpvpn adduser\` to add a user."
+		exit 0
+	fi
+	echo -e "${CLR_WHITE}Current users:${CLR_RESET}"
+	for file in "users"/*; do
+		echo "- $(basename "$file")"
+	done
+}
+
+
+version() {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn version"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ ! -f "version" ]]; then
+		echo_error "No version found (this should never happen)"
+	fi
+	echo_info "TCP-VPN version $(cat version)"
+}
+
+
+update() {
+	# Process arguments
+	f_flag='' # Argument to read from file
+	v_flag=''
+	while getopts ':f:v:' flag; do
+		case "$flag" in
+			f) f_flag="$OPTARG" ;;
+			v) v_flag="$OPTARG" ;;
+			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
+			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
+		esac
+	done
+	if [[ -n "$f_flag" && ! -d "$f_flag" ]]; then
+		echo_error "Directory \"$f_flag\" does not exist."
+		exit 1
+	fi
+	# Fetch latest installer
+	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
+		echo_error "Failed to fetch install script."
+	fi
+	# Pass arguments
+	args=()
+	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
+	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
+	echo "$script" | bash -s -- "${args[@]}" # Pass all arguments (for example -v)
+}
+
+
+uninstall() {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn uninstall"
+		exit 1
+	fi
+	echo_warn 'This option will uninstall the tool completely, erasing the configuration and all users. Type "Yes" exactly to continue.'
+	read -p "> " YES_OPTION
+	if [[ "$YES_OPTION" = "Yes" ]]; then
+		if [[ -f "$BIN_DIRECTORY"/udp2raw ]]; then
+			echo "Would you like to uninstall the udp2raw dependency as well? Type \"Yes\" to confirm, or anything else to deny."
+			read -p "> " YES_OPTION
+			if [[ "$YES_OPTION" = "Yes" ]]; then
+				rm -f "$BIN_DIRECTORY"/udp2raw
+				echo_info "Uninstalled udp2raw."
+			else
+				echo_info "Skip uninstall of udp2raw."
+			fi
+		fi
+		rm -f "$BIN_DIRECTORY"/tcpvpn
+		rm -rf "$CONF_DIRECTORY"
+		echo_info "Done!"
+	else
+		echo_info "Abort."
+	fi
+}
+
+
+
+
+# Main logic
 set -e
 
 if [[ $(whoami) != "root" ]]; then
@@ -57,7 +360,7 @@ case "$1" in
 	print) shift; print_user "$@";;
 	list) shift; list_users "$@";;
 	configure) shift; configure "$@";;
-	version) shift; print_version "$@";;
+	version) shift; version "$@";;
 	update) shift; update "$@";;
 	uninstall) shift; uninstall "$@";;
 	*) 
@@ -67,16 +370,18 @@ case "$1" in
 		echo -e "\
 ${CLR_WHITE}\
 Usage:\n\
-Manage users\n\
+Manage configuration\n\
 ${CLR_RESET}\
     tcpvpn adduser <name>\n\
     tcpvpn revoke <name>\n\
     tcpvpn print <name>\n\
     tcpvpn list\n\
-${CLR_WHITE}\
-Manage configuration\n\
-${CLR_RESET}\
     tcpvpn configure\n\
+${CLR_WHITE}\
+VPN up/down\n\
+${CLR_RESET}\
+    tcpvpn up\n\
+    tcpvpn down\n\
 ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\

@@ -58,6 +58,9 @@ get_ipv6_gateway() {
 	route -n get -inet6 default | grep gateway | awk "{print \$2}" 2>/dev/null
 }
 
+
+# Main Functions
+
 create_endpoint () {
 	f_flag='' # Argument to read from file
 	while getopts ':f:' flag; do
@@ -178,7 +181,7 @@ create_endpoint () {
 
 	# WIREGUARD_PORT
 	if [[ -z "${WIREGUARD_PORT// }" ]]; then
-		echo -ne "Choose an empty port where wireguard and udp2raw can communicate. (ex. 50001)\n> "
+		echo -ne "Choose an empty port for internal communication between wireguard and udp2raw. (ex. 50001)\n> "
 		read WIREGUARD_PORT
 	else
 		echo_info 'Reading WIREGUARD_PORT from provided file.'
@@ -368,6 +371,7 @@ uninstall () {
 	fi
 }
 
+
 export_conf () { # `export` is reserved
 	if [[ -z "$1" ]]; then
 		echo_error "Argument <name> required"
@@ -386,6 +390,7 @@ export_conf () { # `export` is reserved
 	fi
 	cat "endpoints/$1/script_env.cfg"
 }
+
 
 delete () {
 	if [[ -z "$1" ]]; then
@@ -408,6 +413,7 @@ delete () {
 	echo_info "Done!"
 }
 
+
 list () {
 	if [[ -n $1 ]]; then
 		echo_error "Too many arguments."
@@ -416,7 +422,7 @@ list () {
 	fi
 	cd "$APPLICATION_SUPPORT_DIR"
 	if [[ ! -d "endpoints" || -z "$( ls -A endpoints )" ]]; then
-		echo "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
+		echo_info "No configurations currently exist. Use \`tcpvpn create\` to create a configuration."
 		exit 0
 	fi
 	echo -e "${CLR_WHITE}Current configurations:${CLR_RESET}"
@@ -424,6 +430,7 @@ list () {
 		echo "- $(basename "$file")"
 	done
 }
+
 
 version () {
 	if [[ -n $1 ]]; then
@@ -437,6 +444,7 @@ version () {
 	fi
 	echo_info "TCP-VPN version $(cat version)"
 }
+
 
 update () {
 	# Process arguments
@@ -464,7 +472,6 @@ update () {
 	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
 	echo "$script" | bash -s -- "${args[@]}" # Pass all arguments (for example -v)
 }
-
 
 
 # Main logic
@@ -508,7 +515,7 @@ ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\
     tcpvpn version\n\
-    tcpvpn update\n\
+    tcpvpn update [-f <source_directory>] [-v <version>]\n\
     tcpvpn uninstall"
 		exit 1
 		;;

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# Most of this is the exact same as macos client.
+# Most of this script is the exact same as macos client.
+# How is installation different from client?
+# 1. Automatically installs necessary tools (wg-quick, udp2raw)
+# 2. Supports only one configuration, and `tcpvpn configure` is automatically ran
 
 # Directory structure
 
@@ -8,20 +11,19 @@
 # 	tcpvpn
 # 	udp2raw
 
-# /usr/local/lib/
-# 	tcpvpn/
-# 		PostUp.sh
-
 # ~/.config/tcpvpn/
 # 	compatible_versions
 # 	version
 # 	users/
-# 		user1/
-# 			?
+# 		user1
+# 		user2
 # 	wg.conf
 # 	script_env.cfg
 # 	wg.log
 # 	udp2raw.log
+
+
+
 
 
 CLR_WHITE="\033[1;37m"
@@ -30,8 +32,13 @@ CLR_RED="\033[1;31m"
 CLR_RESET="\033[0m"
 
 BIN_DIRECTORY="/usr/local/bin"
-LIB_DIRECTORY="/usr/local/lib/tcpvpn"
-CONF_DIRECTORY="$HOME/.config/tcpvpn"
+if [[ -n "$SUDO_USER" ]]; then
+  USER_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+else
+  USER_HOME="$HOME"
+fi
+CONF_DIRECTORY="$USER_HOME/.config/tcpvpn"
+
 
 echo_info() {
   echo -e "${CLR_WHITE}[Info] $*${CLR_RESET}"
@@ -64,10 +71,11 @@ if [[ $(whoami) != "root" ]]; then
   exit 1
 fi
 
-# 
-# TODO
-# Error if not debian, ubuntu, etc
-# 
+# Make sure debian
+if ! grep -i '^ID_LIKE=.*debian' /etc/os-release; then
+	echo_error "This install script is intended for debian-like systems only (ubuntu, rasp. pi, etc). Please choose the correct installer."
+	exit 1
+fi
 
 rm -rf /tmp/tcpvpn
 mkdir -p /tmp/tcpvpn
@@ -96,9 +104,9 @@ if [[ -n "$f_flag" ]]; then
 else
 	cd /tmp/tcpvpn
 	if [[ -n "$v_flag" ]]; then
-		url="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/client-macos.tar.gz"
+		url="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/server-linux-debian.tar.gz"
 	else
-		url="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/client-macos.tar.gz"
+		url="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/server-linux-debian.tar.gz"
 	fi
 	if ! curl -fsL "$url" -o tcpvpn.tar.gz; then
 		if [[ -n "$v_flag" ]]; then
@@ -145,12 +153,9 @@ else
 fi
 
 
-# Replace /usr/local/bin/tcpvpn, /usr/local/lib/tcpvpn
+# Replace /usr/local/bin/tcpvpn
 mkdir -p "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp -R bin/* "$BIN_DIRECTORY"
-rm -rf "$LIB_DIRECTORY"
-mkdir -p "$LIB_DIRECTORY"
-cp -R lib/* "$LIB_DIRECTORY"
 
 # Replace ~/.config/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
@@ -171,44 +176,74 @@ rm -rf /tmp/tcpvpn
 
 # Install udp2raw
 if which udp2raw >/dev/null 2>&1; then
-    echo_info "udp2raw already installed."
+	echo_info "udp2raw already installed."
 else
 	rm -rf /tmp/udp2raw
 	mkdir -p /tmp/udp2raw
 	cd /tmp/udp2raw
+	curl -fsSL https://github.com/wangyu-/udp2raw/releases/download/20230206.0/udp2raw_binaries.tar.gz -o udp2raw.tar.gz
+	tar xzf udp2raw.tar.gz
 
-		# TODO Wrong URL (multiplatform not needed)
-    curl -fsSL https://github.com/wangyu-/udp2raw-multiplatform/releases/download/20230206.0/udp2raw_mp_binaries.tar.gz -o udp2raw.tar.gz
-    tar xzf udp2raw.tar.gz
-
-    # TODO Wrong Arch command
-    ARCH=$(uname -m)
-    if [[ "$ARCH" = "arm64" ]]; then # Apple M1, etc
-    	cp udp2raw_mp_mac_m1 "$BIN_DIRECTORY/udp2raw"
-    else
-    	if [[ "$ARCH" = "x86_64" ]]; then
-    		cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw"
-    	else
-    		echo_error "Arch could not be detected (this should never happen)"
-    		exit 1
-    	fi
-    fi
-    rm -rf /tmp/udp2raw
-    echo_info "Installed udp2raw."
+	# Detect architecture and copy appropriate binary
+	case $(uname -m) in
+		aarch64) cp udp2raw_arm "$BIN_DIRECTORY/udp2raw" ;;
+		arm64) cp udp2raw_arm "$BIN_DIRECTORY/udp2raw" ;;
+		x86_64) cp udp2raw_amd64 "$BIN_DIRECTORY/udp2raw" ;;
+		i386) cp udp2raw_x86 "$BIN_DIRECTORY/udp2raw" ;;
+		i486) cp udp2raw_x86 "$BIN_DIRECTORY/udp2raw" ;;
+		i586) cp udp2raw_x86 "$BIN_DIRECTORY/udp2raw" ;;
+		i686) cp udp2raw_x86 "$BIN_DIRECTORY/udp2raw" ;;
+		*) echo_error "Arch could not be detected"; exit 1
+	esac
+	rm -rf /tmp/udp2raw
+	echo_info "Installed udp2raw."
 fi
 
 
-# Prompt user to install wireguard-tools
+# Install wireguard-tools
 if which wg-quick >/dev/null 2>&1; then
 	echo_info "wg-quick already installed."
 else
-	# TODO wrong installation command (apt instead)
-	echo_warn "Dependency \`wg-quick\` not found. Install with \`brew install wireguard-tools\`."
+	if ! apt-get update > /dev/null 2>&1; then
+		echo_error "Could not update apt."
+		exit 1
+	fi
+	if ! apt-get install -y wireguard-tools > /dev/null 2>&1; then
+		echo_error "Could not install wireguard-tools."
+		exit 1
+	fi
+	if ! which wg-quick >/dev/null 2>&1; then
+		echo_error "Installation of wireguard-tools was not successful."
+		exit 1
+	fi
 fi
 
-chmod -R 755 "$LIB_DIRECTORY"/*
-chmod -R 755 "$BIN_DIRECTORY"/*
+chmod -R 755 "$BIN_DIRECTORY"/tcpvpn
+chmod -R 755 "$BIN_DIRECTORY"/udp2raw >/dev/null 2>&1 || true
 
-echo_info "Successfully installed the tool."
+# Allow packet forwarding
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv6.conf.all.forwarding=1
+echo_info "Allowed packet forwarding via sysctl."
+
+if which iptables >/dev/null 2>&1; then
+	sudo iptables -F INPUT
+	sudo iptables -F FORWARD
+	sudo iptables -F OUTPUT
+	sudo iptables -P INPUT ACCEPT
+	sudo iptables -P FORWARD ACCEPT
+	sudo iptables -P OUTPUT ACCEPT
+	DEFAULT_INTERFACE=$(ip route | grep '^default' | grep -oP 'dev \K\S+')
+	sudo iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o "$DEFAULT_INTERFACE" -j MASQUERADE
+	sudo ip6tables -t nat -A POSTROUTING -s fd42:42:42::/64 -o "$DEFAULT_INTERFACE" -j MASQUERADE
+	echo_info "Flushed iptables and added masquerade rules."
+else
+	echo_warn "iptables not found. The VPN probably won't work unless you modify your firewall/routing tables to accept and forward packets in the correct way."
+fi
+
+# TODO start automatically on reboot
+
+echo_info "Installation was successful. Running \`tcpvpn configure\`..."
+tcpvpn configure
 exit 0
 
