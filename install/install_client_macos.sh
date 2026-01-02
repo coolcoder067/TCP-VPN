@@ -49,7 +49,7 @@ echo_warn() {
 }
 
 echo_error() {
-	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
 set -e # Fail on error, just in case

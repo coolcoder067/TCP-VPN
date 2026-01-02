@@ -38,7 +38,7 @@ echo_warn() {
 }
 
 echo_error() {
-	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
 get_default_iface() {
@@ -503,21 +503,21 @@ ${CLR_WHITE}\
 Usage:\n\
 Manage configurations\n\
 ${CLR_RESET}\
-    tcpvpn create [-f <filepath>]\n\
-    tcpvpn delete <name>\n\
-    tcpvpn export <name>\n\
-    tcpvpn list\n\
+	tcpvpn create [-f <filepath>]\n\
+	tcpvpn delete <name>\n\
+	tcpvpn export <name>\n\
+	tcpvpn list\n\
 ${CLR_WHITE}\
 Activate/deactivate the VPN\n\
 ${CLR_RESET}\
-    tcpvpn up <name>\n\
-    tcpvpn down <name>\n\
+	tcpvpn up <name>\n\
+	tcpvpn down <name>\n\
 ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\
-    tcpvpn version\n\
-    tcpvpn update [-f <source_directory>] [-v <version>]\n\
-    tcpvpn uninstall"
+	tcpvpn version\n\
+	tcpvpn update [-f <source_directory>] [-v <version>]\n\
+	tcpvpn uninstall"
 		exit 1
 		;;
 esac

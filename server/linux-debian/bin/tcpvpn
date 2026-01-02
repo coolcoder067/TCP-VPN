@@ -43,7 +43,7 @@ echo_warn() {
 }
 
 echo_error() {
-	echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
 
@@ -130,10 +130,9 @@ up() {
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
-
+	echo 1 > state
 	echo_info "VPN successfully up!"
-
-	# TODO add state file that up and down recognize
+	
 }
 
 
@@ -150,7 +149,23 @@ down() {
 		exit 1
 	fi
 	killall udp2raw || true
+	echo 0 > state
 	echo "VPN successfully down."
+}
+
+
+resolve_state_or_restart() {
+	cd "$CONF_DIRECTORY"
+	if [[ -n $(wg) ]]; then
+		# The VPN is active, restart
+		down
+		up
+	else
+		# The VPN is inactive, activate accoriding to state file
+		if [[ $(cat state) == 1 ]]; then
+			up
+		fi
+	fi
 }
 
 
@@ -204,9 +219,11 @@ add_user() {
 	USER_PUBLIC_KEY=$(echo "$USER_PRIVATE_KEY" | wg pubkey)
 	# Allocate IP Addresses: 2-254 are available
 	addrs_used=()
-	for file in "users"/*; do
-		addrs_used+=($(sed -n "s/^ADDR_NUMBER=\(.*\)/\1/p" "$file"))
-	done
+	if [[ -d users && -n "$(ls -A users)" ]]; then
+		for file in "users"/*; do
+			addrs_used+=($(sed -n "s/^ADDR_NUMBER=\(.*\)/\1/p" "$file"))
+		done
+	fi
 	# Find the least used one, and exit if none are available
 	ADDR_NUMBER=""
 	for i in {2..254}; do
@@ -224,18 +241,21 @@ add_user() {
 		fi
 	done
 	if [[ -z "$ADDR_NUMBER" ]]; then
-		echo_error "No IP could be located. (This should only happen if you have >200 users)"
+		echo_error "No IP could be allocated. (This should only happen if you have >200 users)"
 		exit 1
 	fi
 	mkdir -p "$CONF_DIRECTORY/users" >/dev/null 2>&1 || true
 	echo -ne "USER_PUBLIC_KEY='$USER_PUBLIC_KEY'\nUSER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nADDR_NUMBER='$ADDR_NUMBER'" \
 > "users/$1"
+	echo_info "Creation of user \"$1\" successful!"
 	# Restart wireguard
-	echo_info "Restarting the VPN..."
-	down
-	up
-	echo_info "Done! Running \`tcpvpn print \"$1\"\`:\n"
-	print_user "$1"
+	resolve_state_or_restart
+	if [[ -f script_env.cfg ]]; then
+		echo_info "Done! Running \`tcpvpn print \"$1\"\`:"
+		print_user "$1"
+	else
+		echo_warn "Could not run \`tcpvpn print\` because the VPN has not been configured. Do so with \`tcpvpn configure\`."
+	fi
 }
 
 
@@ -319,7 +339,16 @@ update() {
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
 	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
+	cd "$CONF_DIRECTORY"
+	WAS_UP=0
+	if [[ $(cat state) == 1 ]]; then
+		down
+		WAS_UP=1
+	fi
 	echo "$script" | bash -s -- "${args[@]}" # Pass all arguments (for example -v)
+	if [[ "$WAS_UP" == 1 ]]; then
+		up
+	fi
 }
 
 
@@ -381,24 +410,24 @@ ${CLR_WHITE}\
 Usage:\n\
 Manage configuration\n\
 ${CLR_RESET}\
-    tcpvpn adduser <name>\n\
-    tcpvpn revoke <name>\n\
-    tcpvpn print <name>\n\
-    tcpvpn list\n\
-    tcpvpn configure\n\
+	tcpvpn adduser <name>\n\
+	tcpvpn revoke <name>\n\
+	tcpvpn print <name>\n\
+	tcpvpn list\n\
+	tcpvpn configure\n\
 ${CLR_WHITE}\
 VPN up/down\n\
 ${CLR_RESET}\
-    tcpvpn up\n\
-    tcpvpn down\n\
+	tcpvpn up\n\
+	tcpvpn down\n\
 ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\
-    tcpvpn version\n\
-    tcpvpn update [-f <source_directory>] [-v <version>]\n\
-    tcpvpn uninstall"
-    	exit 1
-    	;;
+	tcpvpn version\n\
+	tcpvpn update [-f <source_directory>] [-v <version>]\n\
+	tcpvpn uninstall"
+		exit 1
+		;;
 esac
 
 

@@ -49,7 +49,7 @@ echo_warn() {
 }
 
 echo_error() {
-  echo -e "${CLR_RED}[Error] $*${CLR_RESET}"
+  echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
 set -e # Fail on error, just in case
@@ -76,6 +76,7 @@ if ! grep -iq '^ID_LIKE=.*debian' /etc/os-release; then
 	echo_error "This install script is intended for debian-like systems only (ubuntu, rasp. pi, etc). Please choose the correct installer."
 	exit 1
 fi
+
 
 rm -rf /tmp/tcpvpn
 mkdir -p /tmp/tcpvpn
@@ -157,8 +158,9 @@ fi
 mkdir -p "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp -R bin/* "$BIN_DIRECTORY"
 
-# Replace ~/.config/tcpvpn
+# ~/.config/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
+	# Replace ~/.config/tcpvpn
 	if [[ -d $CONF_DIRECTORY ]]; then
 		echo_info "Overwriting configuration directory."
 		rm -rf "$CONF_DIRECTORY"
@@ -169,6 +171,10 @@ else
 	echo_info "Skip overwrite of configuration directory."
 	cp configuration/version "$CONF_DIRECTORY/version"
 	cp configuration/compatible_versions "$CONF_DIRECTORY/compatible_versions"
+fi
+
+if [[ ! -f "$CONF_DIRECTORY"/state ]]; then
+	echo 0 > "$CONF_DIRECTORY"/state
 fi
 
 cd
@@ -217,6 +223,7 @@ else
 		echo_error "Installation of wireguard-tools was not successful."
 		exit 1
 	fi
+	echo_info "Installed wireguard-tools."
 fi
 
 chmod -R 755 "$BIN_DIRECTORY"/tcpvpn
@@ -244,7 +251,7 @@ fi
 
 # TODO start automatically on reboot
 
-echo_info "Installation was successful."
+echo_info "Installation was successful!"
 echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."
 exit 0
 
