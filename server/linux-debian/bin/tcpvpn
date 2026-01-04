@@ -17,6 +17,11 @@
 #     tcpvpn update
 #     tcpvpn uninstall
 
+# State file is NOT for determining whether the vpn is up or not. 
+# That is done with if [[ -n $(wg) ]]
+# State file is used for in the event of a disruption to determine
+# whether the vpn WAS up
+
 INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh"
 
 BIN_DIRECTORY="/usr/local/bin"
@@ -103,6 +108,10 @@ up() {
 		echo_info "Usage: tcpvpn up"
 		exit 1
 	fi
+	if [[ -n $(wg) ]]; then
+		echo_error "Wireguard is already up."
+		exit 1
+	fi
 	# Generate wg.conf
 	cd "$CONF_DIRECTORY"
 	if [[ ! -f script_env.cfg ]]; then
@@ -111,17 +120,19 @@ up() {
 	fi
 	source script_env.cfg # This contains everything we need to generate wg.conf
 	# No PostUp, etc. because that can be handled here and in down()
-	echo -ne "[Interface]\nPrivateKey = $SERVER_PRIVATE_KEY\nAddress=$SERVER_ADDRESS\nListenPort=$INTERNAL_PORT\nMTU=1342\n" > wg.conf
-	for file in "users"/*; do
-		source "$file"
-		echo -ne "\n[Peer]\nPublicKey = $USER_PUBLIC_KEY\nAllowedIPs = 10.0.0.$ADDR_NUMBER/24, fd42:42:42::$ADDR_NUMBER/64\n" >> wg.conf
-	done
-
+	echo -ne "[Interface]\nPrivateKey = $SERVER_PRIVATE_KEY\nAddress = $SERVER_ADDRESS\nListenPort = $INTERNAL_PORT\nMTU = 1342\n" > wg.conf
+	if [[ -d users && -n "$(ls -A users)" ]]; then
+		for file in "users"/*; do
+			source "$file"
+			echo -ne "\n[Peer]\nPublicKey = $USER_PUBLIC_KEY\nAllowedIPs = 10.0.0.$ADDR_NUMBER/32, fd42:42:42::$ADDR_NUMBER/128\n" >> wg.conf
+		done
+	fi
+	
 	# Bring up udp2raw
 	# $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+') local ip
 	# $(ip route | grep '^default' | grep -oP 'dev \K\S+') default iface
-	udp2raw -s -l $(ip route | grep '^default' | grep -oP 'dev \K\S+'):$LISTEN_PORT -r 127.0.0.1:$INTERNAL_PORT \
-		-k $UDP2RAW_PWD -a --dev $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+') \
+	udp2raw -s -l $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+'):$LISTEN_PORT -r 127.0.0.1:$INTERNAL_PORT \
+		-k $UDP2RAW_PWD -a --dev $(ip route | grep '^default' | grep -oP 'dev \K\S+') \
 		--cipher-mode xor --auth-mode simple > "udp2raw.log" 2>&1 &
 
 
@@ -142,15 +153,19 @@ down() {
 		echo_info "Usage: tcpvpn down"
 		exit 1
 	fi
+	if [[ -z $(wg) ]]; then
+		echo_error "Wireguard is already down."
+		exit 1
+	fi
 	cd "$CONF_DIRECTORY"
 	# Bring down wireguard
 	if ! wg-quick down "./wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
 	fi
-	killall udp2raw || true
+	pkill udp2raw >/dev/null 2>&1 || true
 	echo 0 > state
-	echo "VPN successfully down."
+	echo_info "VPN successfully down."
 }
 
 
@@ -181,7 +196,7 @@ print_user() {
 		exit 1
 	fi
 	cd "$CONF_DIRECTORY"
-	if [[ ! -f "users"/$1 ]]; then
+	if [[ ! -f "users"/"$1" ]]; then
 		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
 		exit 1
 	fi
@@ -190,8 +205,8 @@ print_user() {
 		exit 1
 	fi
 	source script_env.cfg
-	source "users"/$1
-	echo -ne "ENDPOINT_PORT='$LISTEN_PORT'\nSERVER_PUBLIC_KEY='$SERVER_PUBLIC_KEY'\nUDP2RAW_PWD='$UDP2RAW_PWD'\n\
+	source "users"/"$1"
+	echo -e "ENDPOINT_PORT='$LISTEN_PORT'\nSERVER_PUBLIC_KEY='$SERVER_PUBLIC_KEY'\nUDP2RAW_PWD='$UDP2RAW_PWD'\n\
 USER_PRIVATE_KEY='$USER_PRIVATE_KEY'\nUSER_ADDRESS='10.0.0.$ADDR_NUMBER/24, fd42:42:42::$ADDR_NUMBER/64'"
 }
 
@@ -251,7 +266,7 @@ add_user() {
 	# Restart wireguard
 	resolve_state_or_restart
 	if [[ -f script_env.cfg ]]; then
-		echo_info "Done! Running \`tcpvpn print \"$1\"\`:"
+		echo_info "Done! Running \`tcpvpn print \"$1\"\`:\n"
 		print_user "$1"
 	else
 		echo_warn "Could not run \`tcpvpn print\` because the VPN has not been configured. Do so with \`tcpvpn configure\`."
@@ -271,13 +286,14 @@ revoke_user() {
 		exit 1
 	fi
 	cd "$CONF_DIRECTORY"
-	if [[ ! -f "users"/$1 ]]; then
+	if [[ ! -f "users"/"$1" ]]; then
 		echo_error "No user exists with name \"$1\". Use \`tcpvpn adduser\` to add a user."
 		exit 1
 	fi
 	read -p "Press enter to permanently delete user \"$1\", or Ctrl+C to quit. "
 	rm -rf "users/$1"
-	echo_info "Done!"
+	resolve_state_or_restart
+	echo_info "Deletion of user \"$1\" successful."
 }
 
 
