@@ -37,6 +37,7 @@ CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
 CLR_RED="\033[1;31m"
 CLR_RESET="\033[0m"
+CLR_PURPLE="\033[1;35m"
 
 
 echo_info() {
@@ -49,6 +50,10 @@ echo_warn() {
 
 echo_error() {
 	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
+}
+
+echo_debug() {
+	echo -e "${CLR_PURPLE}[Debug] $*${CLR_RESET}"
 }
 
 
@@ -127,7 +132,7 @@ up() {
 			echo -ne "\n[Peer]\nPublicKey = $USER_PUBLIC_KEY\nAllowedIPs = 10.0.0.$ADDR_NUMBER/32, fd42:42:42::$ADDR_NUMBER/128\n" >> wg.conf
 		done
 	fi
-	
+
 	# Bring up udp2raw
 	# $(ip route | grep '^default' | grep -oP 'src \K[0-9.]+') local ip
 	# $(ip route | grep '^default' | grep -oP 'dev \K\S+') default iface
@@ -236,7 +241,7 @@ add_user() {
 	addrs_used=()
 	if [[ -d users && -n "$(ls -A users)" ]]; then
 		for file in "users"/*; do
-			addrs_used+=($(sed -n "s/^ADDR_NUMBER=\(.*\)/\1/p" "$file"))
+			addrs_used+=($(sed -n "s/^ADDR_NUMBER='\?\([^']*\)'\?/\1/p" "$file"))
 		done
 	fi
 	# Find the least used one, and exit if none are available
