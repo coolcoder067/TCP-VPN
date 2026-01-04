@@ -96,25 +96,25 @@ ssh vpn
 
 ### Server Setup
 
-```
-# First, install (see above)
-sudo tcpvpn configure
-# Follow the on-screen prompts
-sudo tcpvpn adduser <your_name>
-# You will need the output of `tcpvpn print` for later
-sudo tcpvpn up
-```
+1. First, install (see above).
+
+2. Run `sudo tcpvpn configure`. Follow the on-screen prompts.
+
+3. Run `sudo tcpvpn adduser <your_name>`. You will need the output of `tcpvpn print` for later.
+
+4. Run `sudo tcpvpn up`
 
 ### Client Setup (MacOS)
 
-```
-# First, install (see above)
-nano configuration.cfg
-# Paste the output of `tcpvpn print` and save the file
-sudo tcpvpn create -f configuration.cfg
-# Follow the on-screen prompts
-sudo tcpvpn up <name>
-```
+
+1. First, install (see above).
+
+2. Make a file containing the output of `tcpvpn print` from the server.
+
+3. Run `sudo tcpvpn create -f <text_file>`. Follow the on-screen prompts.
+
+4. Run `sudo tcpvpn up <name>`
+
 
 ## Client Usage (MacOS)
 
