@@ -72,25 +72,25 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 6. Navigate to `Compute` > `Instances` and click `Create instance`. Click `Change Image` and under `Ubuntu` select `Canonical Ubuntu 24.04 Minimal aarch64`. Make sure the shape is set to `VM.Standard.A1.Flex` with 1 core OCPU and 6GB memory. Click `Next` to navigate to the `Networking` section. Make sure your VCN and subnet are selected and download the private SSH key. Create the instance.
 
-*If the free tier won't let you create a VM because of error 'Out of capacity for shape', you will need to upgrade to paid tier. This won't charge you anything as long as you are careful to stay within the limits of their generous [free tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).*
+   *If the free tier won't let you create a VM because of error 'Out of capacity for shape', you will need to upgrade to paid tier. This won't charge you anything as long as you are careful to stay within the limits of their generous [free tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).*
 
 7. Navigate back to `Compute` > `Instances` and after a little while you should see the public IP address of your new VM.
 
 8. Move the key somewhere safe. Edit `~/.ssh/config` to add the following entry:
 
-```
-Host vpn
-HostName <public_ip_address_of_your_vm>
-User ubuntu
-IdentityFile <location_to_key_file>
-```
+   ```
+   Host vpn
+   HostName <public_ip_address_of_your_vm>
+   User ubuntu
+   IdentityFile <location_to_key_file>
+   ```
 
 9. SSH into your VM:
 
-```
-chmod 400 <location_to_key_file>
-ssh vpn
-```
+   ```
+   chmod 400 <location_to_key_file>
+   ssh vpn
+   ```
 
 ## Quick Start
 
