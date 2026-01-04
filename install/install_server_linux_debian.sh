@@ -24,8 +24,6 @@
 
 
 
-
-
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
 CLR_RED="\033[1;31m"

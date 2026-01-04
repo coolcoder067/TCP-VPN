@@ -113,7 +113,7 @@ ssh vpn
 
 3. Run `sudo tcpvpn create -f <text_file>`. Follow the on-screen prompts.
 
-4. Run `sudo tcpvpn up <name>`
+4. Run `sudo tcpvpn up <name>` to activate the VPN. Run `sudo tcpvpn down` to deactivate it.
 
 
 ## Client Usage (MacOS)

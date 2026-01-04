@@ -21,8 +21,8 @@ jobs:
         run: |
           cp -R configuration client/macos
           tar -czf client-macos.tar.gz -C client/macos .
-          cp -R configuration server/linux-debian
-          tar -czf server-linux-debian.tar.gz -C server/linux-debian .
+          cp -R configuration server/linux_debian
+          tar -czf server-linux-debian.tar.gz -C server/linux_debian .
 
       - name: Set release metadata
         id: meta
