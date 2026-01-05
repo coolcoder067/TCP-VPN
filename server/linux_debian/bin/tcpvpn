@@ -114,7 +114,7 @@ up() {
 		exit 1
 	fi
 	if [[ -n $(wg) ]]; then
-		echo_error "Wireguard is already up."
+		echo_error "The VPN already up."
 		exit 1
 	fi
 	# Generate wg.conf
@@ -159,7 +159,7 @@ down() {
 		exit 1
 	fi
 	if [[ -z $(wg) ]]; then
-		echo_error "Wireguard is already down."
+		echo_error "The VPN is already down."
 		exit 1
 	fi
 	cd "$CONF_DIRECTORY"

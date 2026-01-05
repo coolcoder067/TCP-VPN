@@ -229,7 +229,7 @@ PostUp = '$LIB_DIRECTORY/PostUp.sh' '$CONFIGURATION_DIR'\n\n\
 [Peer]\nPublicKey = $SERVER_PUBLIC_KEY\nAllowedIPs = 0.0.0.0/0, ::/0\n\
 Endpoint = 127.0.0.1:$WIREGUARD_PORT\n" > "$CONFIGURATION_DIR"/wg.conf
 
-	echo_info "Generated files at \"$CONFIGURATION_DIR\".\nUse \`sudo tcpvpn up $CONFIGURATION_NAME\` to activate your VPN."
+	echo_info "Successfully added configurtaion. Use \`sudo tcpvpn up $CONFIGURATION_NAME\` to activate the VPN."
 }
 
 # Logic for activation and deactivation
