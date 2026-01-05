@@ -175,6 +175,13 @@ if [[ ! -f "$CONF_DIRECTORY"/state ]]; then
 	echo 0 > "$CONF_DIRECTORY"/state
 fi
 
+# Systemd service
+cp tcpvpn.service /etc/systemd/system/
+systemctl daemon-reload > /dev/null
+systemctl enable tcpvpn > /dev/null
+
+
+# CD'ing to root home because we're about to remove the directory we're currently in
 cd
 rm -rf /tmp/tcpvpn
 
@@ -247,7 +254,6 @@ else
 	echo_warn "iptables not found. The VPN probably won't work unless you modify your firewall/routing tables to accept and forward packets in the correct way."
 fi
 
-# TODO start automatically on reboot
 
 echo_info "Installation was successful!"
 echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."

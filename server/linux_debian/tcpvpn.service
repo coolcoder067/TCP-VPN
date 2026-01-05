@@ -1,0 +1,11 @@
+[Unit]
+Description=TCP-VPN start on reboot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tcpvpn _resolve_state_or_restart
+
+[Install]
+WantedBy=multi-user.target

@@ -208,7 +208,7 @@ status() {
 }
 
 
-resolve_state_or_restart() {
+_resolve_state_or_restart() {
 	cd "$CONF_DIRECTORY"
 	if [[ -n $(wg) ]]; then
 		# The VPN is active, restart
@@ -303,7 +303,7 @@ add_user() {
 > "users/$1"
 	echo_info "Creation of user \"$1\" successful!"
 	# Restart wireguard
-	resolve_state_or_restart
+	_resolve_state_or_restart
 	if [[ -f script_env.cfg ]]; then
 		echo_info "Done! Running \`tcpvpn print \"$1\"\`:\n"
 		print_user "$1"
@@ -331,7 +331,7 @@ revoke_user() {
 	fi
 	read -p "Press enter to permanently delete user \"$1\", or Ctrl+C to quit. "
 	rm -rf "users/$1"
-	resolve_state_or_restart
+	_resolve_state_or_restart
 	echo_info "Deletion of user \"$1\" successful."
 }
 
@@ -427,6 +427,7 @@ uninstall() {
 			fi
 		fi
 		rm -f "$BIN_DIRECTORY"/tcpvpn
+		rm -f /etc/systemd/system/tcpvpn.service
 		rm -rf "$CONF_DIRECTORY"
 		echo_info "Done!"
 	else
@@ -458,6 +459,7 @@ case "$1" in
 	version) shift; version "$@";;
 	update) shift; update "$@";;
 	uninstall) shift; uninstall "$@";;
+	_resolve_state_or_restart) _resolve_state_or_restart;;
 	*) 
 		if [[ -n "$1" ]]; then
 			echo_error "Unknown command \"$1\"."

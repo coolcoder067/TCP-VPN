@@ -222,6 +222,17 @@ This will make all packets coming from 10.0.0.x to have their source IP rewritte
 
 The other cause of this problem is a misconfigured firewall, especially if this is hosted in the public cloud. I recommend allowing everything in and out in this case.
 
+### Log locations
+
+**Linux Debian Server**:
+
+- Most logs are in `~/.config/tcpvpn`
+- `systemd` log: `journalctl -u tcpvpn.service`
+
+**MacOS Client**
+
+- Logs are in `~/Library/Application Support/tcpvpn/endpoints/<endpoint_name>`
+
 ## Contribution
 
 Contribution is welcome! I currently need help porting this to Windows. Next on my list is ubuntu server.
