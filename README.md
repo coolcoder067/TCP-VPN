@@ -61,29 +61,29 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 1. [Create an account](https://signup.cloud.oracle.com). 
 
-2. Navigate to **Networking** > **Virtual Cloud Networks** and make a new VCN. Use `10.0.0.0/16` for the IPv4 CIDR block, and turn on the option to assign an Oracle-allocated IPv6 prefix.
+2. Navigate to **Networking** > **Virtual Cloud Networks** and make a new VCN. Use `10.0.0.0/16` for the IPv4 CIDR block, and turn on the option to assign an Oracle-allocated IPv6 prefix. Click **Create VCN**.
 
-	*If on the free plan, you may have to delete the existing VCN in order to create the new one. The following steps won't work with the default VCN.*
+	*If on the free plan, you may have to delete the existing VCN in order to create the new one. The following steps won't work with the default VCN. If you have trouble deleting it, try deleting all the route rules in its default route table first.*
 
-3. Under the new VCN, click on **Security** > **Default Security List for (VCN name)**. Click on **Security Rules**. Turn the **Stateless** option on for all rules where **IP Protocol** = **TCP**. This will (theoretically) make the performance faster.
-
-4. Go back to the **Security** section and click on **Create security list**. Add the following rules for **Ingress** only:
+3. Under the new VCN, click on **Security** **Create security list**. Add the following rules for both **Ingress** AND **Egress**:
 
 	- Stateless = **ON**, Source CIDR = `0.0.0.0/0`, IP Protocol = **All Protocols**
 	- Stateless = **ON**, Source CIDR = `::/0`, IP Protocol = **All Protocols**
 
 	This will allow all traffic (not usually security best practice, but I can't think of a better alternative for this kind of VPN server).
 
-5. Go to the **Subnets** section and click **Create Subnet**. Use `10.0.0.0/24` for the IPv4 CIDR block, and be sure to assign an Oracle-allocated IPv6 prefix. Enter `00` for the two hex characters. Select your new security list from the dropdown to associate it with the subnet.
+4. Go to the **Subnets** section and click **Create Subnet**. Use `10.0.0.0/24` for the IPv4 CIDR block, and be sure to assign an Oracle-allocated IPv6 prefix. Enter `00` for the two hex characters. Select your new security list from the dropdown to associate it with the subnet. Once the subnet is created, examine its **Security** section to make sure that your custom list has been applied rather than the default one.
 
-6. Go to the **Gateways** section and click **Create Internet Gateway**. Name it and click **Create Internet Gateway**. *That should be the only gateway.*
+5. Go to the **Gateways** section and click **Create Internet Gateway**. Name it and click **Create Internet Gateway**. *That should be the only gateway.*
 
-7. Go to the **Routing** section and click **Default Route Table for (VCN name)**. Add the following rules:
+6. Go to the **Routing** section and click **Default Route Table for (VCN name)**. Under the **Route Rules** section, add the following rules:
 
 	- Protocol Version = **IPv4**, Target Type = **Internet Gateway**, Destination CIDR Block = `0.0.0.0/0`, Target Internet Gateway = **(Your gateway name)**
 	- Protocol Version = **IPv6**, Target Type = **Internet Gateway**, Destination CIDR Block = `::/0`, Target Internet Gateway = **(Your gateway name)**
 
-6. Navigate to **Compute** > **Instances** and click **Create instance**. Click **Change Image** and under **Ubuntu** select **Canonical Ubuntu 24.04 Minimal aarch64**. Make sure the shape is set to **VM.Standard.A1.Flex** with 1 core OCPU and 6GB memory. Click **Next** to navigate to the **Networking** section. Make sure your VCN and subnet are selected and download the private SSH key. Create the instance.
+	This will give your VCN access to the Internet.
+
+7. Navigate to **Compute** > **Instances** and click **Create instance**. Click **Change Image** and under **Ubuntu** select **Canonical Ubuntu 24.04 Minimal aarch64**. Make sure the shape is set to **VM.Standard.A1.Flex** with 1 core OCPU and 6GB memory. Click **Next** to navigate to the **Networking** section. Make sure your VCN and subnet are selected and download the private SSH key. Create the instance.
 
 	*If the free tier won't let you create a VM because of error 'Out of capacity for shape', you will need to upgrade to paid tier. This won't charge you anything as long as you are careful to stay within the limits of their generous [free tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).*
 
