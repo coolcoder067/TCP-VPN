@@ -61,38 +61,51 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 1. [Create an account](https://signup.cloud.oracle.com). 
 
-2. Navigate to `Networking` and make a new VCN (Virtual Cloud Network). Use `10.0.0.0/16` for the IPv4 CIDR block, and be sure to assign an Oracle-allocated IPv6 prefix.
+2. Navigate to **Networking** > **Virtual Cloud Networks** and make a new VCN. Use `10.0.0.0/16` for the IPv4 CIDR block, and turn on the option to assign an Oracle-allocated IPv6 prefix.
 
-3. Under the new VCN, click on `Security` > `Default security list for <your_vcn>`. Turn the `Stateless` option on for all rules where `IP Protocol` = `TCP`. This will (theoretically) make the performance faster.
+	*If on the free plan, you may have to delete the existing VCN in order to create the new one. The following steps won't work with the default VCN.*
 
-4. Go back to the `Security` section and click on `Create security list`. Add the following rules for Ingress AND Egress:
+3. Under the new VCN, click on **Security** > **Default Security List for (VCN name)**. Click on **Security Rules**. Turn the **Stateless** option on for all rules where **IP Protocol** = **TCP**. This will (theoretically) make the performance faster.
 
-   - Stateless = ON, Source CIDR = `0.0.0.0/0`, IP Protocol = `All Protocols`
-   - Stateless = ON, Source CIDR = `::/0`, IP Protocol = `All Protocols`
+4. Go back to the **Security** section and click on **Create security list**. Add the following rules for **Ingress** only:
 
-5. Go to the `Subnets` section. Click `Create Subnet`. Use `10.0.0.0/24` for the IPv4 CIDR block, and be sure to assign an Oracle-allocated IPv6 prefix. Enter `00` for the two hex characters. Select your new security list from the dropdown to associate it with the subnet.
+	- Stateless = **ON**, Source CIDR = `0.0.0.0/0`, IP Protocol = **All Protocols**
+	- Stateless = **ON**, Source CIDR = `::/0`, IP Protocol = **All Protocols**
 
-6. Navigate to `Compute` > `Instances` and click `Create instance`. Click `Change Image` and under `Ubuntu` select `Canonical Ubuntu 24.04 Minimal aarch64`. Make sure the shape is set to `VM.Standard.A1.Flex` with 1 core OCPU and 6GB memory. Click `Next` to navigate to the `Networking` section. Make sure your VCN and subnet are selected and download the private SSH key. Create the instance.
+	This will allow all traffic (not usually security best practice, but I can't think of a better alternative for this kind of VPN server).
 
-   *If the free tier won't let you create a VM because of error 'Out of capacity for shape', you will need to upgrade to paid tier. This won't charge you anything as long as you are careful to stay within the limits of their generous [free tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).*
+5. Go to the **Subnets** section and click **Create Subnet**. Use `10.0.0.0/24` for the IPv4 CIDR block, and be sure to assign an Oracle-allocated IPv6 prefix. Enter `00` for the two hex characters. Select your new security list from the dropdown to associate it with the subnet.
 
-7. Navigate back to `Compute` > `Instances` and after a little while you should see the public IP address of your new VM.
+6. Go to the **Gateways** section and click **Create Internet Gateway**. Name it and click **Create Internet Gateway**. *That should be the only gateway.*
 
-8. Move the key somewhere safe. Edit `~/.ssh/config` to add the following entry:
+7. Go to the **Routing** section and click **Default Route Table for (VCN name)**. Add the following rules:
 
-   ```
-   Host vpn
-   HostName <public_ip_address_of_your_vm>
-   User ubuntu
-   IdentityFile <location_to_key_file>
-   ```
+	- Protocol Version = **IPv4**, Target Type = **Internet Gateway**, Destination CIDR Block = `0.0.0.0/0`, Target Internet Gateway = **(Your gateway name)**
+	- Protocol Version = **IPv6**, Target Type = **Internet Gateway**, Destination CIDR Block = `::/0`, Target Internet Gateway = **(Your gateway name)**
+
+6. Navigate to **Compute** > **Instances** and click **Create instance**. Click **Change Image** and under **Ubuntu** select **Canonical Ubuntu 24.04 Minimal aarch64**. Make sure the shape is set to **VM.Standard.A1.Flex** with 1 core OCPU and 6GB memory. Click **Next** to navigate to the **Networking** section. Make sure your VCN and subnet are selected and download the private SSH key. Create the instance.
+
+	*If the free tier won't let you create a VM because of error 'Out of capacity for shape', you will need to upgrade to paid tier. This won't charge you anything as long as you are careful to stay within the limits of their generous [free tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).*
+
+7. Navigate back to **Compute** > **Instances** and after a little while you should see the public IP address of your new VM. You will need that for SSH.
+
+8. Click on your new instance and navigate to **Networking**. Under **Attached VNICs** click on the only VNIC in the list. Click on **IP Administration** > **Assign IPv6 address**. Don't change anything and click **Assign**.
+
+8. Move the SSH key you downloaded somewhere safe. Edit `~/.ssh/config` to add the following entry:
+
+	```
+	Host vpn
+	HostName <public_ip_address_of_your_vm>
+	User ubuntu
+	IdentityFile <location_to_key_file>
+	```
 
 9. SSH into your VM:
 
-   ```
-   chmod 400 <location_to_key_file>
-   ssh vpn
-   ```
+	```
+	chmod 400 <location_to_key_file>
+	ssh vpn
+	```
 
 ## Quick Start
 
@@ -128,17 +141,17 @@ Do this first.
 ```
 Usage:
 Manage configurations
-   tcpvpn create [-f <filepath>]
-   tcpvpn delete <name>
-   tcpvpn export <name>
-   tcpvpn list
+	tcpvpn create [-f <filepath>]
+	tcpvpn delete <name>
+	tcpvpn export <name>
+	tcpvpn list
 Activate/deactivate the VPN
-   tcpvpn up <name>
-   tcpvpn down <name>
+	tcpvpn up <name>
+	tcpvpn down <name>
 Manage the installation
-   tcpvpn version
-   tcpvpn update [-f <source_directory>] [-v <version>]
-   tcpvpn uninstall
+	tcpvpn version
+	tcpvpn update [-f <source_directory>] [-v <version>]
+	tcpvpn uninstall
 ```
 
 ### Linux Debian Server
@@ -146,47 +159,47 @@ Manage the installation
 ```
 Usage:
 Manage configuration
-   tcpvpn adduser <name>
-   tcpvpn revoke <name>
-   tcpvpn print <name>
-   tcpvpn list
-   tcpvpn configure
+	tcpvpn adduser <name>
+	tcpvpn revoke <name>
+	tcpvpn print <name>
+	tcpvpn list
+	tcpvpn configure
 VPN up/down
-   tcpvpn up
-   tcpvpn down
+	tcpvpn up
+	tcpvpn down
 Manage the installation
-   tcpvpn version
-   tcpvpn update [-f <source_directory>] [-v <version>]
-   tcpvpn uninstall
+	tcpvpn version
+	tcpvpn update [-f <source_directory>] [-v <version>]
+	tcpvpn uninstall
 ```
 
 ## Troubleshooting
 To attempt to troubleshoot, it helps to first visualize the flow of packets as they travel through the network.
 ```
 1. Local Source
-   |       ˄
-   |       |
-   ˅       |
+	|       ˄
+	|       |
+	˅       |
 2. Wireguard (local)
-   |       ˄
-   |       |  Through the loopback interface...
-   ˅       |
+	|       ˄
+	|       |  Through the loopback interface...
+	˅       |
 3. udp2raw (local)
-   |       ˄
-   |       |  Over the public internet...
-   ˅       |
+	|       ˄
+	|       |  Over the public internet...
+	˅       |
 4. udp2raw (endpoint)
-   |       ˄
-   |       |  Through the loopback interface...
-   ˅       |
+	|       ˄
+	|       |  Through the loopback interface...
+	˅       |
 5. Wireguard (endpoint)
-   |       ˄
-   |       |
-   ˅       |
+	|       ˄
+	|       |
+	˅       |
 6. Kernel routing tables (endpoint)
-   |       ˄
-   |       |  Over the public internet...
-   ˅       |
+	|       ˄
+	|       |  Over the public internet...
+	˅       |
 7. End Destination
 ```
 Try `ping <wireguard_endpoint_ip>`. `<wireguard_endpoint_ip` is 10.0.0.1 in the example. If this does work, it's likely a problem with step 6. If it doesn't, there's likely a problem with steps 2, 3, 4, or 5.
