@@ -4,14 +4,16 @@ Bypasses the restrictions of hostile wifi networks by encapsulating VPN UDP traf
 
 Under the hood, uses [wireguard](https://git.zx2c4.com/wireguard-tools) for the VPN connection and [udp2raw](https://github.com/wangyu-/udp2raw) for UDP→TCP. 
 
-Tested on Mac, may or may not work on Linux. A windows version is coming soon.
+Client only available for MacOS as of now. A windows version is coming soon.
 
 ## Dependencies
 
 - `wireguard-tools`
 - `udp2raw`: Automatically installed by installation script
 
-## Client Installation (MacOS)
+## Installation
+
+### MacOS Client
 
 ```
 curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
@@ -32,7 +34,7 @@ chmod +x install/install_client_macos.sh
 sudo install/install_client_macos.sh -f client/macos
 ```
 
-## Server Installation (Debian-based Linux)
+### Linux Debian Server
 
 Tested on Ubuntu Server 24.04 LTS
 
@@ -96,6 +98,8 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 ### Server Setup (Linux Debian)
 
+Do this first.
+
 1. First, install (see above).
 
 2. Run `sudo tcpvpn configure`. Follow the on-screen prompts.
@@ -105,7 +109,6 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 4. Run `sudo tcpvpn up`
 
 ### Client Setup (MacOS)
-
 
 1. First, install (see above).
 
