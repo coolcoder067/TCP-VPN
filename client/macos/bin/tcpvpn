@@ -11,6 +11,7 @@
 # Activate/deactivate the VPN
 #     tcpvpn up <name>
 #     tcpvpn down <name>
+#     tcpvpn status
 #
 # Manage the installation
 #     tcpvpn version
@@ -248,7 +249,7 @@ activate_endpoint () {
 		echo_info "Usage: tcpvpn up <name>"
 		exit 1
 	fi
-	if [[ -n $(get_wg_iface) ]]; then
+	if [[ -n $(wg) ]]; then
 		echo_error "VPN already active. Use \`tcpvpn down\` to deactivate."
 		exit 1
 	fi
@@ -311,7 +312,7 @@ deactivate_endpoint () {
 		echo_info "Usage: tcpvpn down"
 		exit 1
 	fi
-	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z $(get_wg_iface) ]]; then
+	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z $(wg) ]]; then
 		echo_error "The VPN is not active. Use \`tcpvpn up <name>\` to activate."
 		exit 1
 	fi
@@ -338,7 +339,26 @@ deactivate_endpoint () {
 	route -n delete $(cat resolved_addr) >/dev/null
 	# Firewall down
 	pfctl -d >/dev/null 2>&1 || true
+	rm "$APPLICATION_SUPPORT_DIR"/active # Technically not needed but just in case
 	echo_info "Done!"
+}
+
+
+status() {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn status"
+		exit 1
+	fi
+	if [[ -n $(wg) ]]; then
+		if [[ -f "$APPLICATION_SUPPORT_DIR"/active ]]; then
+			echo_info "The VPN is currently UP, using configuration \"$(cat "$APPLICATION_SUPPORT_DIR"/active)\""
+		else
+			echo_error "The VPN seems to be UP, but could not determine the configuration."
+		fi
+	else
+		echo_info "The VPN is currently DOWN."
+	fi
 }
 
 
@@ -488,6 +508,7 @@ case "$1" in
 	create) shift; create_endpoint "$@";;
 	up) shift; activate_endpoint "$@";;
 	down) shift; deactivate_endpoint "$@";;
+	status) shift; status "$@";;
 	uninstall) shift; uninstall "$@";;
 	export) shift; export_conf "$@";;
 	delete) shift; delete "$@";;
@@ -512,6 +533,7 @@ Activate/deactivate the VPN\n\
 ${CLR_RESET}\
 	tcpvpn up <name>\n\
 	tcpvpn down <name>\n\
+	tcpvpn status\n\
 ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\

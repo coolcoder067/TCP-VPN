@@ -11,6 +11,7 @@
 # VPN up/down
 #     tcpvpn up
 #     tcpvpn down
+#     tcpvpn status
 #
 # Manage the installation
 #     tcpvpn version
@@ -171,6 +172,20 @@ down() {
 	pkill udp2raw >/dev/null 2>&1 || true
 	echo 0 > state
 	echo_info "VPN successfully down."
+}
+
+
+status() {
+	if [[ -n $1 ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn status"
+		exit 1
+	fi
+	if [[ -n $(wg) ]]; then
+		echo_info "The VPN is currently UP."
+	else
+		echo_info "The VPN is currently DOWN."
+	fi
 }
 
 
@@ -418,6 +433,7 @@ case "$1" in
 	list) shift; list_users "$@";;
 	up) shift; up "$@";;
 	down) shift; down "$@";;
+	status) shift; status "$@";;
 	configure) shift; configure "$@";;
 	version) shift; version "$@";;
 	update) shift; update "$@";;
@@ -441,6 +457,7 @@ VPN up/down\n\
 ${CLR_RESET}\
 	tcpvpn up\n\
 	tcpvpn down\n\
+	tcpvpn status\n\
 ${CLR_WHITE}\
 Manage the installation\n\
 ${CLR_RESET}\
