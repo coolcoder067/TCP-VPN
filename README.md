@@ -8,7 +8,7 @@ Tested on Mac, may or may not work on Linux. A windows version is coming soon.
 
 ## Dependencies
 
-- `wireguard-tools`: `brew install wireguard-tools`
+- `wireguard-tools`
 - `udp2raw`: Automatically installed by installation script
 
 ## Client Installation (MacOS)
@@ -94,7 +94,7 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 ## Quick Start
 
-### Server Setup
+### Server Setup (Linux Debian)
 
 1. First, install (see above).
 
@@ -109,6 +109,8 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 
 1. First, install (see above).
 
+2. Install [Homebrew](https://brew.sh) if needed. Run `brew install wireguard-tools`. 
+
 2. Make a file containing the output of `tcpvpn print` from the server.
 
 3. Run `sudo tcpvpn create -f <text_file>`. Follow the on-screen prompts.
@@ -116,7 +118,9 @@ sudo install/install_server_linux_debian.sh -f server/linux_debian
 4. Run `sudo tcpvpn up <name>` to activate the VPN. Run `sudo tcpvpn down` to deactivate it.
 
 
-## Client Usage (MacOS)
+## Usage
+
+### MacOS Client
 
 ```
 Usage:
@@ -134,7 +138,7 @@ Manage the installation
    tcpvpn uninstall
 ```
 
-## Server Usage
+### Linux Debian Server
 
 ```
 Usage:
