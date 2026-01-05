@@ -8,14 +8,14 @@
 #     tcpvpn export <name>
 #     tcpvpn list
 #
-# Activate/deactivate the VPN
+# VPN up/down
 #     tcpvpn up <name>
 #     tcpvpn down <name>
 #     tcpvpn status
 #
 # Manage the installation
 #     tcpvpn version
-#     tcpvpn update
+#     tcpvpn update [-f <source_directory>] [-v <version>]
 #     tcpvpn uninstall
 
 APPLICATION_SUPPORT_DIR=~/"Library/Application Support/tcpvpn"
@@ -529,7 +529,7 @@ ${CLR_RESET}\
 	tcpvpn export <name>\n\
 	tcpvpn list\n\
 ${CLR_WHITE}\
-Activate/deactivate the VPN\n\
+VPN up/down\n\
 ${CLR_RESET}\
 	tcpvpn up <name>\n\
 	tcpvpn down <name>\n\

@@ -2,11 +2,14 @@
 
 # Usage:
 # Manage configuration
+#     tcpvpn configure
+#     tcpvpn info
+#
+# Manage users
 #     tcpvpn adduser <name>
 #     tcpvpn revoke <name>
 #     tcpvpn print <name>
 #     tcpvpn list
-#     tcpvpn configure
 #
 # VPN up/down
 #     tcpvpn up
@@ -15,7 +18,7 @@
 #
 # Manage the installation
 #     tcpvpn version
-#     tcpvpn update
+#     tcpvpn update [-f <source_directory>] [-v <version>]
 #     tcpvpn uninstall
 
 # State file is NOT for determining whether the vpn is up or not. 
@@ -105,6 +108,22 @@ LISTEN_PORT='$LISTEN_PORT'\nUDP2RAW_PWD='$UDP2RAW_PWD'\nSERVER_ADDRESS='$SERVER_
 
 	echo_info "Updated configuration."
 	echo_info "Done."
+}
+
+
+info() {
+	if [[ -n "$1" ]]; then
+		echo_error "Too many arguments."
+		echo_info "Usage: tcpvpn info"
+		exit 1
+	fi
+	cd "$CONF_DIRECTORY"
+	if [[ ! -f script_env.cfg ]]; then
+		echo_info "The VPN has not been configured. Do so with \`tcpvpn configure\`."
+		exit 0
+	fi
+	echo_info "Current configuration:\n"
+	cat script_env.cfg
 }
 
 
@@ -435,6 +454,7 @@ case "$1" in
 	down) shift; down "$@";;
 	status) shift; status "$@";;
 	configure) shift; configure "$@";;
+	info) shift; info "$@";;
 	version) shift; version "$@";;
 	update) shift; update "$@";;
 	uninstall) shift; uninstall "$@";;
@@ -447,11 +467,15 @@ ${CLR_WHITE}\
 Usage:\n\
 Manage configuration\n\
 ${CLR_RESET}\
+	tcpvpn configure\n\
+	tcpvpn info\n\
+${CLR_WHITE}\
+Manage users\n\
+${CLR_RESET}\
 	tcpvpn adduser <name>\n\
 	tcpvpn revoke <name>\n\
-	tcpvpn print <name>\n\
 	tcpvpn list\n\
-	tcpvpn configure\n\
+	tcpvpn print <name>\n\
 ${CLR_WHITE}\
 VPN up/down\n\
 ${CLR_RESET}\
