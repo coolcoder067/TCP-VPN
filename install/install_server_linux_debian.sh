@@ -256,6 +256,9 @@ fi
 
 
 echo_info "Installation was successful!"
-echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."
+if [[ ! -f "$CONF_DIRECTORY"/script_env.cfg ]]; then
+	echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."
+fi
+tcpvpn _resolve_state_or_restart
 exit 0
 

@@ -385,6 +385,10 @@ update() {
 		echo_error "Directory \"$f_flag\" does not exist."
 		exit 1
 	fi
+	if [[ -n $(wg) ]]; then
+		down
+		echo 1 > "$CONF_DIRECTORY"/state
+	fi
 	# Fetch latest installer
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
@@ -394,16 +398,8 @@ update() {
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
 	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
-	cd "$CONF_DIRECTORY"
-	WAS_UP=0
-	if [[ $(cat state) == 1 ]]; then
-		down
-		WAS_UP=1
-	fi
-	echo "$script" | bash -s -- "${args[@]}" # Pass all arguments (for example -v)
-	if [[ "$WAS_UP" == 1 ]]; then
-		up
-	fi
+
+	exec bash -c "$script" -- "${args[@]}" # Terminates current process
 }
 
 
