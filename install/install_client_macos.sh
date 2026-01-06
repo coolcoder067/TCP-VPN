@@ -206,8 +206,8 @@ chmod -R 755 "$LIB_DIRECTORY"/*
 chmod -R 755 "$BIN_DIRECTORY"/*
 
 echo_info "Installation was successful."
-if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update) == 1 ]]; then
-	tcpvpn up
+if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
+	tcpvpn up $(cat "$CONF_DIRECTORY"/active)
 fi
 exit 0
 
