@@ -176,7 +176,7 @@ if [[ ! -f "$CONF_DIRECTORY"/state ]]; then
 fi
 
 # Systemd service
-cp tcpvpn.service /etc/systemd/system/
+cp tcpvpn.service /etc/systemd/system/ > /dev/null
 systemctl daemon-reload > /dev/null
 systemctl enable tcpvpn > /dev/null
 
