@@ -473,7 +473,6 @@ update () {
 	while getopts ':f:v:' flag; do
 		case "$flag" in
 			f) f_flag="$OPTARG" ;;
-			v) v_flag="$OPTARG" ;;
 			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 		esac
@@ -489,6 +488,11 @@ update () {
 		rm "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null || true
 	fi
 	# Fetch latest installer
+	if [[ -n "$v_flag" ]]; then
+		INSTALL_SCRIPT_URL="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/install_client_macos.sh"
+	else
+		INSTALL_SCRIPT_URL="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/install_client_macos.sh"
+	fi
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
 		exit 1
@@ -496,7 +500,6 @@ update () {
 	# Pass arguments
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
-	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
 	exec bash -c "$script" -- "${args[@]}" # Pass all arguments (for example -v)
 	# exec is to replace and terminate the current process
 }

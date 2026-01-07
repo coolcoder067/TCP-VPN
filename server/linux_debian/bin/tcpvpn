@@ -26,7 +26,6 @@
 # State file is used for in the event of a disruption to determine
 # whether the vpn WAS up
 
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh"
 
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
@@ -390,6 +389,11 @@ update() {
 		echo 1 > "$CONF_DIRECTORY"/state
 	fi
 	# Fetch latest installer
+	if [[ -n "$v_flag" ]]; then
+		INSTALL_SCRIPT_URL="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/install_server_linux_debian.sh"
+	else
+		INSTALL_SCRIPT_URL="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/install_server_linux_debian.sh"
+	fi
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
 		exit 1
@@ -397,7 +401,6 @@ update() {
 	# Pass arguments
 	args=()
 	[[ -n "$f_flag" ]] && args+=(-f "$(realpath "$f_flag")")
-	[[ -n "$v_flag" ]] && args+=(-v "$v_flag")
 
 	exec bash -c "$script" -- "${args[@]}" # Terminates current process
 }

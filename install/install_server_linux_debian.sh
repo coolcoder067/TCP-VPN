@@ -22,7 +22,8 @@
 # 	wg.log
 # 	udp2raw.log
 
-
+VERSION="dev-20260107-1"
+URL="https://github.com/coolcoder067/TCP-VPN/releases/download/v${VERSION}/server-linux-debian.tar.gz"
 
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
@@ -95,24 +96,15 @@ if [[ -n "$f_flag" ]]; then
 		echo_error "No version found (this should never happen)"
 		exit 1;
 	fi
-	if [[ -n "$v_flag" ]]; then
-		echo_warn "Version flag -v was ignored because -f was defined."
+	if [[ $(cat configuration/version) != "$VERSION" ]]; then
+		echo_error "Versions do not match"
+		exit 1
 	fi
-	NEW_VERSION=$(cat configuration/version)
-	echo_info "Version $NEW_VERSION loaded from source."
+	echo_info "Version $VERSION loaded from source."
 else
 	cd /tmp/tcpvpn
-	if [[ -n "$v_flag" ]]; then
-		url="https://github.com/coolcoder067/TCP-VPN/releases/download/v${v_flag}/server-linux-debian.tar.gz"
-	else
-		url="https://github.com/coolcoder067/TCP-VPN/releases/latest/download/server-linux-debian.tar.gz"
-	fi
-	if ! curl -fsL "$url" -o tcpvpn.tar.gz; then
-		if [[ -n "$v_flag" ]]; then
-			echo_error "Fetch of version $v_flag failed."
-		else
-			echo_error "Fetch of latest version failed."
-		fi
+	if ! curl -fsL "$URL" -o tcpvpn.tar.gz; then
+		echo_error "Fetch of version $VERSION failed."
 		exit 1
 	fi
 	tar xzf tcpvpn.tar.gz
@@ -120,8 +112,11 @@ else
 		echo_error "No version found (this should never happen)"
 		exit 1;
 	fi
-	NEW_VERSION=$(cat configuration/version)
-	echo_info "Version $NEW_VERSION downloaded."
+	if [[ $(cat configuration/version) != "$VERSION" ]]; then
+		echo_error "Versions do not match"
+		exit 1
+	fi
+	echo_info "Version $VERSION downloaded."
 fi
 
 
@@ -132,7 +127,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
-		if [[ -z "$f_flag" && "$NEW_VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
+		if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
 			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
 			echo_info "Done!"
 			if [[ "$overwrite_conf" -eq 0 ]]; then
