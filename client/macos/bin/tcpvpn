@@ -486,7 +486,7 @@ update () {
 		down
 		echo 1 > "$CONF_DIRECTORY"/was_up_before_update
 	else
-		rm "$CONF_DIRECTORY"/was_up_before_update
+		rm "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null || true
 	fi
 	# Fetch latest installer
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
