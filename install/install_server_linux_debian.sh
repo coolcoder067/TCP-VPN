@@ -177,6 +177,7 @@ fi
 cp tcpvpn.service /etc/systemd/system/ > /dev/null
 systemctl daemon-reload > /dev/null
 systemctl enable tcpvpn > /dev/null
+echo_info "Added systemd service."
 
 
 # CD'ing to root home because we're about to remove the directory we're currently in
