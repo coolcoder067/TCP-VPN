@@ -427,6 +427,7 @@ uninstall() {
 		fi
 		rm -f "$BIN_DIRECTORY"/tcpvpn
 		rm -f /etc/systemd/system/tcpvpn.service
+		systemctl daemon-reload >/dev/null
 		rm -rf "$CONF_DIRECTORY"
 		echo_info "Done!"
 	else
