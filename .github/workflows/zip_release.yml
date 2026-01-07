@@ -49,4 +49,5 @@ jobs:
           files: |
             client-macos.tar.gz
             server-linux-debian.tar.gz
+            install/*
           body: Files here are automatically downloaded by the install script. Don't try to install them yourself. If you would like to install from source, follow the directions in README.md instead.
