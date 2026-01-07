@@ -26,7 +26,6 @@
 # State file is used for in the event of a disruption to determine
 # whether the vpn WAS up
 
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh"
 
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
@@ -373,10 +372,12 @@ update() {
 	# Process arguments
 	f_flag='' # Argument to read from file
 	v_flag=''
-	while getopts ':f:v:' flag; do
+	dev_url=0
+	while getopts ':f:v:d' flag; do
 		case "$flag" in
 			f) f_flag="$OPTARG" ;;
 			v) v_flag="$OPTARG" ;;
+			d) dev_url=1 ;;
 			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 		esac
@@ -390,6 +391,11 @@ update() {
 		echo 1 > "$CONF_DIRECTORY"/state
 	fi
 	# Fetch latest installer
+	if [[ "$dev_url" -eq 1 ]]; then
+		INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_server_linux_debian.sh"
+	else
+		INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh"
+	fi
 	if ! script=$(curl -fsL "$INSTALL_SCRIPT_URL"); then
 		echo_error "Failed to fetch install script."
 		exit 1
