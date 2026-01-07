@@ -135,6 +135,9 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 		if [[ -z "$f_flag" && "$NEW_VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
 			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
 			echo_info "Done!"
+			if [[ "$overwrite_conf" -eq 0 ]]; then
+				tcpvpn _resolve_state_or_restart
+			fi
 			exit 0
 		fi
 		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
