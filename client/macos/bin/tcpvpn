@@ -22,8 +22,6 @@ APPLICATION_SUPPORT_DIR=~/"Library/Application Support/tcpvpn"
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
 
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh"
-
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
 CLR_RED="\033[1;31m"
