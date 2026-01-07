@@ -30,7 +30,7 @@
 # 5. Copy to /usr/local/lib
 
 
-VERSION="dev-20260107-1"
+VERSION="dev-20260107-3"
 URL="https://github.com/coolcoder067/TCP-VPN/releases/download/v${VERSION}/client-macos.tar.gz"
 
 

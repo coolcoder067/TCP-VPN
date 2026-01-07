@@ -475,6 +475,7 @@ update () {
 	while getopts ':f:v:' flag; do
 		case "$flag" in
 			f) f_flag="$OPTARG" ;;
+			v) v_flag="$OPTARG" ;;
 			:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 			\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: tcpvpn update [-f <source_directory>] [-v <version>]"; exit 1;;
 		esac
