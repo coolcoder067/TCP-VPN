@@ -40,6 +40,10 @@ echo_error() {
 	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
+echo_debug() {
+	echo -e "${CLR_PURPLE}[Debug] $*${CLR_RESET}"
+}
+
 get_default_iface() {
 	route -n get default 2>/dev/null | awk '/interface:/{print $2}'
 }

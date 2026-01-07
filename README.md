@@ -16,13 +16,13 @@ Client only available for MacOS as of now. A windows version is coming soon.
 ### MacOS Client
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_client_macos.sh | sudo bash
+curl -fsSL https://github.com/coolcoder067/TCP-VPN/releases/latest/download/install_client_macos.sh | sudo bash
 ```
 
 Install pre-release versions:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_client_macos.sh | sudo bash -s -- -v <prerelease_version>
+curl -fsSL https://github.com/coolcoder067/TCP-VPN/releases/download/v<version>/install_client_macos.sh | sudo bash
 ```
 
 Alternatively, install from source:
@@ -39,13 +39,13 @@ sudo install/install_client_macos.sh -f client/macos
 Tested on Ubuntu Server 24.04 LTS
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/main/install/install_server_linux_debian.sh | sudo bash
+curl -fsSL https://github.com/coolcoder067/TCP-VPN/releases/latest/download/install_server_linux_debian.sh | sudo bash
 ```
 
 Install pre-release versions:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/coolcoder067/TCP-VPN/refs/heads/dev/install/install_server_linux_debian.sh | sudo bash -s -- -v <prerelease_version>
+curl -fsSL https://github.com/coolcoder067/TCP-VPN/releases/download/v<version>/install_server_linux_debian.sh | sudo bash
 ```
 
 Alternatively, install from source:
