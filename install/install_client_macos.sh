@@ -62,7 +62,13 @@ cleanup() {
 		tcpvpn up $(cat "$CONF_DIRECTORY"/active)
 	fi
 }
-trap cleanup SIGINT EXIT
+abort() {
+	echo_info "Abort."
+	cleanup
+	exit 0
+}
+trap cleanup EXIT
+trap abort SIGINT
 
 set -e # Fail on error, just in case
 
