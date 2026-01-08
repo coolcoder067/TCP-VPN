@@ -57,6 +57,7 @@ echo_error() {
 
 directories_overwritten=0
 cleanup() {
+	cd
 	rm -rf /tmp/tcpvpn
 	rm -rf /tmp/udp2raw
 	if [[ "$directories_overwritten" -eq 0 && $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
