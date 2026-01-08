@@ -54,8 +54,14 @@ cleanup() {
 		tcpvpn _resolve_state_or_restart
 	fi
 }
-trap cleanup SIGINT EXIT
 
+abort() {
+	echo_info "Abort."
+	cleanup
+	exit 0
+}
+trap cleanup EXIT
+trap abort SIGINT
 
 set -e # Fail on error, just in case
 
@@ -145,7 +151,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	else
 		echo_warn "A possible installation of the tool was found, but no version information was detected. Proceeding will overwrite this installation."
 	fi
-	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit." </dev/tty
+	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit.\n" </dev/tty
 else 
 	echo_info "No existing installation of the tool was found."
 fi
