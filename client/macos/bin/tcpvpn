@@ -57,7 +57,7 @@ get_ipv4_gateway() {
 }
 
 get_ipv6_gateway() {
-	route -n get -inet6 default | grep gateway | awk "{print \$2}" 2>/dev/null
+	route -n get -inet6 default  2>/dev/null | grep gateway | awk "{print \$2}"
 }
 
 
@@ -251,7 +251,7 @@ activate_endpoint () {
 		echo_info "Usage: tcpvpn up <name>"
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		echo_error "VPN already active. Use \`tcpvpn down\` to deactivate."
 		exit 1
 	fi
@@ -263,7 +263,6 @@ activate_endpoint () {
 		echo_error "No configuration exists for \"$1\". Use \`tcpvpn create\` to create a configuration."
 		exit 1
 	fi
-	echo_info "Activating configuration \"$1\"..."
 	# Proceed with activation
 	cd "$APPLICATION_SUPPORT_DIR"/endpoints/"$1"
 	source script_env.cfg
@@ -304,7 +303,7 @@ activate_endpoint () {
 		exit 1
 	fi
 	echo $1 > "$APPLICATION_SUPPORT_DIR"/active
-	echo_info "Done!"
+	echo_info "Activated configuration \"$1\"."
 }
 
 
@@ -314,7 +313,7 @@ deactivate_endpoint () {
 		echo_info "Usage: tcpvpn down"
 		exit 1
 	fi
-	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z $(wg) ]]; then
+	if [[ ! -f "$APPLICATION_SUPPORT_DIR"/active || -z "$(wg)" ]]; then
 		echo_error "The VPN is not active. Use \`tcpvpn up <name>\` to activate."
 		exit 1
 	fi
@@ -324,7 +323,6 @@ deactivate_endpoint () {
 		echo_error "No file was found at $(pwd)/wg.conf. (this should never happen)"
 		exit 1
 	fi
-	echo_info "Deactivating configuration \"$ACTIVE_VPN\"..."
 	if ! wg-quick down "./wg.conf" > "wg.log" 2>&1; then
 		echo_error "wg-quick failed. See \"$(pwd)/wg.log\" for more information."
 		exit 1
@@ -341,8 +339,7 @@ deactivate_endpoint () {
 	route -n delete $(cat resolved_addr) >/dev/null
 	# Firewall down
 	pfctl -d >/dev/null 2>&1 || true
-	rm "$APPLICATION_SUPPORT_DIR"/active # Technically not needed but just in case
-	echo_info "Done!"
+	echo_info "Deactivated configuration \"$ACTIVE_VPN\"."
 }
 
 
@@ -352,7 +349,7 @@ status() {
 		echo_info "Usage: tcpvpn status"
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		if [[ -f "$APPLICATION_SUPPORT_DIR"/active ]]; then
 			echo_info "The VPN is currently UP, using configuration \"$(cat "$APPLICATION_SUPPORT_DIR"/active)\""
 		else
@@ -373,6 +370,11 @@ uninstall () {
 	echo_warn 'This option will uninstall the tool completely, erasing all VPN configurations. Type "Yes" exactly to continue.'
 	read -p "> " YES_OPTION
 	if [[ "$YES_OPTION" = "Yes" ]]; then
+		if [[ -n "$(wg)" ]]; then
+			if ! deactivate_endpoint; then
+				echo_warn "The VPN could not be deactivated. A restart is recommended."
+			fi
+		fi
 		if [[ -f "$BIN_DIRECTORY"/udp2raw ]]; then
 			echo "Would you like to uninstall the udp2raw dependency as well? Type \"Yes\" to confirm, or anything else to deny."
 			read -p "> " YES_OPTION
@@ -484,11 +486,11 @@ update () {
 		echo_error "Directory \"$f_flag\" does not exist."
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
-		down
-		echo 1 > "$CONF_DIRECTORY"/was_up_before_update
+	if [[ -n "$(wg)" ]]; then
+		deactivate_endpoint
+		echo 1 > "$APPLICATION_SUPPORT_DIR"/was_up_before_update
 	else
-		rm "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null || true
+		rm -f "$APPLICATION_SUPPORT_DIR"/was_up_before_update
 	fi
 	# Fetch latest installer
 	if [[ -n "$v_flag" ]]; then

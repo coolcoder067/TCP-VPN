@@ -55,13 +55,11 @@ set -e # Fail on error, just in case
 
 # Read arguments
 f_flag='' # Argument to read from file
-v_flag=''
-while getopts ':f:v:' flag; do
+while getopts ':f:' flag; do
 	case "$flag" in
 		f) f_flag="$OPTARG" ;;
-		v) v_flag="$OPTARG" ;;
-		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>] [-v <version>]"; exit 1;;
-		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>] [-v <version>]"; exit 1;;
+		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>]"; exit 1;;
+		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_server_linux_debian.sh [-f <source_directory>]"; exit 1;;
 	esac
 done
 

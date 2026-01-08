@@ -22,7 +22,7 @@
 #     tcpvpn uninstall
 
 # State file is NOT for determining whether the vpn is up or not. 
-# That is done with if [[ -n $(wg) ]]
+# That is done with if [[ -n "$(wg)" ]]
 # State file is used for in the event of a disruption to determine
 # whether the vpn WAS up
 
@@ -132,7 +132,7 @@ up() {
 		echo_info "Usage: tcpvpn up"
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		echo_error "The VPN already up."
 		exit 1
 	fi
@@ -177,7 +177,7 @@ down() {
 		echo_info "Usage: tcpvpn down"
 		exit 1
 	fi
-	if [[ -z $(wg) ]]; then
+	if [[ -z "$(wg)" ]]; then
 		echo_error "The VPN is already down."
 		exit 1
 	fi
@@ -199,7 +199,7 @@ status() {
 		echo_info "Usage: tcpvpn status"
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		echo_info "The VPN is currently UP."
 	else
 		echo_info "The VPN is currently DOWN."
@@ -209,7 +209,7 @@ status() {
 
 _resolve_state_or_restart() {
 	cd "$CONF_DIRECTORY"
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		# The VPN is active, restart
 		down
 		up
@@ -384,7 +384,7 @@ update() {
 		echo_error "Directory \"$f_flag\" does not exist."
 		exit 1
 	fi
-	if [[ -n $(wg) ]]; then
+	if [[ -n "$(wg)" ]]; then
 		down
 		echo 1 > "$CONF_DIRECTORY"/state
 	fi

@@ -60,13 +60,11 @@ set -e # Fail on error, just in case
 
 # Read arguments
 f_flag='' # Argument to read from file
-v_flag=''
-while getopts ':f:v:' flag; do
+while getopts ':f:' flag; do
 	case "$flag" in
 		f) f_flag="$OPTARG" ;;
-		v) v_flag="$OPTARG" ;;
-		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>] [-v <version>]"; exit 1;;
-		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>] [-v <version>]"; exit 1;;
+		:) echo_error "-$OPTARG requires an argument"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>]"; exit 1;;
+		\?) echo_error "Invalid option -$OPTARG"; echo_info "Usage: ./install_client_macos.sh [-f <source_directory>]"; exit 1;;
 	esac
 done
 
@@ -131,11 +129,11 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
-		if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
-			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
-			echo_info "Done!"
-			exit 0
-		fi
+		# if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
+		# 	echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
+		# 	echo_info "Done!"
+		# 	exit 0
+		# fi
 		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
 			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version. Proceeding will not overwrite the current configuration."
 			overwrite_conf=0
@@ -188,6 +186,7 @@ else
 		x86_64) cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw" ;;
 		*) echo_error "Arch could not be detected (this should never happen)"; exit 1
 	esac
+	cd
 	rm -rf /tmp/udp2raw
 	echo_info "Installed udp2raw."
 fi
@@ -199,8 +198,11 @@ else
 	echo_warn "Dependency \`wg-quick\` not found. Install with \`brew install wireguard-tools\`."
 fi
 
+cd
+
 chmod -R 755 "$LIB_DIRECTORY"/*
 chmod -R 755 "$BIN_DIRECTORY"/*
+
 
 echo_info "Installation was successful."
 if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
