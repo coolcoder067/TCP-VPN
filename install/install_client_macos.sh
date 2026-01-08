@@ -30,7 +30,7 @@
 # 5. Copy to /usr/local/lib
 
 
-VERSION="1.3.1-rc.6"
+VERSION="1.3.1-rc.7"
 URL="https://github.com/coolcoder067/TCP-VPN/releases/download/v${VERSION}/client-macos.tar.gz"
 
 
@@ -157,7 +157,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	trap 'echo -ne "\n"; echo_info "Abort."; exit 0' INT
 	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit." </dev/tty
 	trap - INT
-else 
+else
 	echo_info "No existing installation of the tool was found."
 fi
 
