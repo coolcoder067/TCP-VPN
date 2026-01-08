@@ -11,7 +11,7 @@
 # 	tcpvpn
 # 	udp2raw
 
-# ~/.config/tcpvpn/
+# /etc/tcpvpn
 # 	compatible_versions
 # 	version
 # 	users/
@@ -31,12 +31,7 @@ CLR_RED="\033[1;31m"
 CLR_RESET="\033[0m"
 
 BIN_DIRECTORY="/usr/local/bin"
-if [[ -n "$SUDO_USER" ]]; then
-  USER_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
-else
-  USER_HOME="$HOME"
-fi
-CONF_DIRECTORY="$USER_HOME/.config/tcpvpn"
+CONF_DIRECTORY="/etc/tcpvpn"
 
 
 echo_info() {
@@ -152,9 +147,9 @@ fi
 mkdir -p "$BIN_DIRECTORY" >/dev/null 2>&1 || true
 cp -R bin/* "$BIN_DIRECTORY"
 
-# ~/.config/tcpvpn
+# /etc/tcpvpn
 if [[ "$overwrite_conf" -eq 1 ]]; then
-	# Replace ~/.config/tcpvpn
+	# Replace /etc/tcpvpn
 	if [[ -d $CONF_DIRECTORY ]]; then
 		echo_info "Overwriting configuration directory."
 		rm -rf "$CONF_DIRECTORY"

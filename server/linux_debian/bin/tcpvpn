@@ -29,12 +29,7 @@
 
 BIN_DIRECTORY="/usr/local/bin"
 LIB_DIRECTORY="/usr/local/lib/tcpvpn"
-if [[ -n "$SUDO_USER" ]]; then
-  USER_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
-else
-  USER_HOME="$HOME"
-fi
-CONF_DIRECTORY="$USER_HOME/.config/tcpvpn"
+CONF_DIRECTORY="/etc/tcpvpn"
 
 CLR_WHITE="\033[1;37m"
 CLR_YELLOW="\033[1;33m"
@@ -208,6 +203,9 @@ status() {
 
 
 _resolve_state_or_restart() {
+	if [[ -n "$1" ]]; then
+		cd "$1"
+	fi
 	cd "$CONF_DIRECTORY"
 	if [[ -n "$(wg)" ]]; then
 		# The VPN is active, restart
