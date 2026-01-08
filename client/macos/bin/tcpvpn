@@ -268,14 +268,14 @@ activate_endpoint () {
 	source script_env.cfg
 	# Save ipv4 Gateway
 	ipv4_gw=$(get_ipv4_gateway)
-	if [[ -z ipv4_gw ]]; then
+	if [[ -z "$ipv4_gw" ]]; then
 		echo_error "No ipv4 gateway. (this should never happen)"
 		exit 1
 	fi
 	echo "$ipv4_gw" > ipv4_gw
 	# Save ipv6 gateway if exists
 	ipv6_gw=$(get_ipv6_gateway)
-	if [[ -n ipv6_gw ]]; then
+	if [[ -n "$ipv6_gw" ]]; then
 		echo "$ipv6_gw" > ipv6_gw
 	else
 		rm -f ipv6_gw

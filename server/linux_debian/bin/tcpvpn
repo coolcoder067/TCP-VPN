@@ -301,8 +301,12 @@ add_user() {
 	echo_info "Creation of user \"$1\" successful!"
 	# Restart wireguard
 	_resolve_state_or_restart
+	echo_info "Done!"
+	if public_ip=$(curl -4fsL ifconfig.me); then
+		echo_info "The server public IP is $public_ip."
+	fi
 	if [[ -f script_env.cfg ]]; then
-		echo_info "Done! Running \`tcpvpn print \"$1\"\`:\n"
+		echo_info "Running \`tcpvpn print \"$1\"\`:\n"
 		print_user "$1"
 	else
 		echo_warn "Could not run \`tcpvpn print\` because the VPN has not been configured. Do so with \`tcpvpn configure\`."
