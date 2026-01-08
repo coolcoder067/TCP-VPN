@@ -46,6 +46,17 @@ echo_error() {
   echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
+cleanup() {
+	cd
+	rm -rf /tmp/tcpvpn
+	rm -rf /tmp/udp2raw
+	if [[ "$overwrite_conf" -eq 0 ]]; then
+		tcpvpn _resolve_state_or_restart
+	fi
+}
+trap cleanup SIGINT EXIT
+
+
 set -e # Fail on error, just in case
 
 # Read arguments
@@ -123,9 +134,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 		if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
 			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
 			echo_info "Done!"
-			if [[ "$overwrite_conf" -eq 0 ]]; then
-				tcpvpn _resolve_state_or_restart
-			fi
+			cleanup
 			exit 0
 		fi
 		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
@@ -173,10 +182,6 @@ systemctl enable tcpvpn > /dev/null
 echo_info "Added systemd service."
 
 
-# CD'ing to root home because we're about to remove the directory we're currently in
-cd
-rm -rf /tmp/tcpvpn
-
 
 # Install udp2raw
 if which udp2raw >/dev/null 2>&1; then
@@ -199,7 +204,6 @@ else
 		i686) cp udp2raw_x86 "$BIN_DIRECTORY/udp2raw" ;;
 		*) echo_error "Arch could not be detected"; exit 1
 	esac
-	rm -rf /tmp/udp2raw
 	echo_info "Installed udp2raw."
 fi
 
@@ -251,8 +255,6 @@ echo_info "Installation was successful!"
 if [[ ! -f "$CONF_DIRECTORY"/script_env.cfg ]]; then
 	echo_info "To finish configurtaion of the server, run \`tcpvpn configure\`."
 fi
-if [[ "$overwrite_conf" -eq 0 ]]; then
-	tcpvpn _resolve_state_or_restart
-fi
+cleanup
 exit 0
 

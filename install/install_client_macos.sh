@@ -55,6 +55,15 @@ echo_error() {
 	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
+cleanup() {
+	rm -rf /tmp/tcpvpn
+	rm -rf /tmp/udp2raw
+	if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
+		tcpvpn up $(cat "$CONF_DIRECTORY"/active)
+	fi
+}
+trap cleanup SIGINT EXIT
+
 set -e # Fail on error, just in case
 
 
@@ -129,11 +138,12 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	# Check for version information
 	if [[ -f "$CONF_DIRECTORY/version" ]]; then
 		OLD_VERSION=$(cat "$CONF_DIRECTORY/version")
-		# if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
-		# 	echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
-		# 	echo_info "Done!"
-		# 	exit 0
-		# fi
+		if [[ -z "$f_flag" && "$VERSION" == "$OLD_VERSION" ]]; then # Installing from github and versions are the same
+			echo_info "Version $OLD_VERSION of the tool is already installed and up to date."
+			cleanup
+			echo_info "Done!"
+			exit 0
+		fi
 		if grep -Fxq "$OLD_VERSION" "/tmp/tcpvpn/configuration/compatible_versions"; then
 			echo_info "Version $OLD_VERSION of the tool is already installed, and the configuration files are backwards-compatible with this version. Proceeding will not overwrite the current configuration."
 			overwrite_conf=0
@@ -169,7 +179,7 @@ else
 	cp configuration/compatible_versions "$CONF_DIRECTORY/compatible_versions"
 fi
 
-rm -rf /tmp/tcpvpn
+
 
 # Install udp2raw
 if which udp2raw >/dev/null 2>&1; then
@@ -186,8 +196,6 @@ else
 		x86_64) cp udp2raw_mp_mac "$BIN_DIRECTORY/udp2raw" ;;
 		*) echo_error "Arch could not be detected (this should never happen)"; exit 1
 	esac
-	cd
-	rm -rf /tmp/udp2raw
 	echo_info "Installed udp2raw."
 fi
 
@@ -198,15 +206,12 @@ else
 	echo_warn "Dependency \`wg-quick\` not found. Install with \`brew install wireguard-tools\`."
 fi
 
-cd
 
 chmod -R 755 "$LIB_DIRECTORY"/*
 chmod -R 755 "$BIN_DIRECTORY"/*
 
 
 echo_info "Installation was successful."
-if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
-	tcpvpn up $(cat "$CONF_DIRECTORY"/active)
-fi
+cleanup
 exit 0
 
