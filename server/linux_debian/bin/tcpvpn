@@ -430,6 +430,11 @@ uninstall() {
 	echo_warn 'This option will uninstall the tool completely, erasing the configuration and all users. Type "Yes" exactly to continue.'
 	read -p "> " YES_OPTION
 	if [[ "$YES_OPTION" = "Yes" ]]; then
+		if [[ -n "$(wg)" ]]; then
+			if ! down; then
+				echo_warn "The VPN could not be deactivated. A restart is recommended."
+			fi
+		fi
 		if [[ -f "$BIN_DIRECTORY"/udp2raw ]]; then
 			echo "Would you like to uninstall the udp2raw dependency as well? Type \"Yes\" to confirm, or anything else to deny."
 			read -p "> " YES_OPTION
