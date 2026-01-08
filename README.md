@@ -238,3 +238,11 @@ The other cause of this problem is a misconfigured firewall, especially if this 
 Contribution is welcome! I currently need help porting this to Windows. Next on my list is ubuntu server.
 
 Found a bug, or need help? Open an issue.
+
+### Release Checklist
+
+- Did you update the version number in `configuration/version` and `configuration/compatible_versions`?
+
+- Did you update the version number in all installers?
+
+- Did you thouroughly test it?
