@@ -23,6 +23,8 @@ jobs:
           tar -czf client-macos.tar.gz -C client/macos .
           cp -R configuration server/linux_debian
           tar -czf server-linux-debian.tar.gz -C server/linux_debian .
+          cp -R configuration client/windows
+          zip -r client-windows.zip client/windows
 
       - name: Set release metadata
         id: meta
@@ -49,5 +51,6 @@ jobs:
           files: |
             client-macos.tar.gz
             server-linux-debian.tar.gz
+            client-windows.zip
             install/*
           body: Files here are automatically downloaded by the install script. Don't try to install them yourself. If you would like to install from source, follow the directions in README.md instead.
