@@ -55,20 +55,15 @@ echo_error() {
 	echo -e "${CLR_RED}[Error] $*${CLR_RESET}" >&2
 }
 
+directories_overwritten=0
 cleanup() {
 	rm -rf /tmp/tcpvpn
 	rm -rf /tmp/udp2raw
-	if [[ $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
+	if [[ "$directories_overwritten" -eq 0 && $(cat "$CONF_DIRECTORY"/was_up_before_update 2>/dev/null) == 1 && -f "$CONF_DIRECTORY"/active ]]; then
 		tcpvpn up $(cat "$CONF_DIRECTORY"/active)
 	fi
 }
-abort() {
-	echo_info "Abort."
-	cleanup
-	exit 0
-}
 trap cleanup EXIT
-trap abort SIGINT
 
 set -e # Fail on error, just in case
 
@@ -158,7 +153,7 @@ if [[ -d "$CONF_DIRECTORY" ]]; then
 	else
 		echo_warn "A possible installation of the tool was found, but no version information was detected. Proceeding will overwrite this installation."
 	fi
-	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit." </dev/tty
+	read -p "Do you want to proceed? Press Enter to continue, or Ctrl+C to quit." </dev/tty || { echo -ne "\n"; echo_info "Abort."; exit 0 }
 else 
 	echo_info "No existing installation of the tool was found."
 fi
@@ -178,6 +173,7 @@ if [[ "$overwrite_conf" -eq 1 ]]; then
 	fi
 	mkdir -p "$CONF_DIRECTORY"
 	cp -R configuration/* "$CONF_DIRECTORY"
+	directories_overwritten=1
 else
 	echo_info "Skip overwrite of configuration directory."
 	cp configuration/version "$CONF_DIRECTORY/version"
