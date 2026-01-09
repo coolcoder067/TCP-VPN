@@ -4,8 +4,11 @@ const els = {
 	form: document.getElementById("form"),
 	submitBtn: document.getElementById("generate-btn"),
 	formInputElements: document.getElementsByClassName("form-item"),
-	clearBtn: document.getElementById("clear-btn")
-}
+	clearBtn: document.getElementById("clear-btn"),
+	errorText: document.getElementById("error-text"),
+	errorBox: document.getElementById("error-box"),
+	errorBtn: document.getElementById("error-x-btn")
+};
 
 
 for (const formItem of els.formInputElements) {
@@ -13,6 +16,36 @@ for (const formItem of els.formInputElements) {
 		formItem.classList.remove("auto-filled");
 	});
 }
+
+let errorHideTimeout;
+
+const showError = (err) => {
+	err = "Error: " + err;
+	console.error(err);
+	els.errorText.textContent = err;
+	if (els.errorBox.classList.contains("show")) {
+		els.errorBox.classList.remove("show");
+		els.errorBox.addEventListener("transitionend", function handler(e) {
+			if (e.propertyName === "bottom") {
+				els.errorBox.removeEventListener("transitionend", handler);
+				els.errorBox.classList.add("show");
+			}
+		})
+	} else {
+		els.errorBox.classList.add("show");
+	}
+	// Hide after 5 seconds
+	if (errorHideTimeout) {
+		clearTimeout(errorHideTimeout);
+	}
+	errorHideTimeout = setTimeout(() => {
+		els.errorBox.classList.remove("show");
+	}, 4000);
+};
+
+els.errorBtn.addEventListener("click", (e) => {
+	els.errorBox.classList.remove("show");
+});
 
 const processFile = async (file) => {
 	// Add to form
@@ -36,42 +69,34 @@ const processFile = async (file) => {
 		}
 	}
 
-}
+};
 
 
 els.dragAndDropZone.addEventListener("drop", (e) => {
-	const fileItems = [...e.dataTransfer.items]
-		.filter((item) => item.kind === "file");
-	if (fileItems.length > 0) {
-		e.preventDefault();
-		const file = fileItems[0].getAsFile();
-		console.log(`File type ${file.type}, dragged and dropped`)
-		if (file.type.startsWith("text/") || ! file.type) {
-			processFile(file);
+	e.preventDefault();
+	const files = e.dataTransfer.files;
+	if (files.length > 0) {
+		console.log(`File type ${files[0].type}, dragged and dropped`);
+		if (files[0].type.startsWith("text/") || ! files[0].type) {
+			processFile(files[0]);
 		} else {
-			// Show error box
+			showError("No configuration information found");
 		}
 	}
 });
 
-
 els.dragAndDropZone.addEventListener("dragover", (e) => {
-	const fileItems = [...e.dataTransfer.items]
-		.filter((item) => item.kind === "file");
-	if (fileItems.length > 0) {
-		e.preventDefault();
-	}
-
+	e.preventDefault();
 });
 
 els.dragAndDropInput.addEventListener("change", (e) => {
 	if (e.target.files.length > 0) {
 		const file = e.target.files[0];
-		console.log(`File type ${file.type}, imported manually`)
+		console.log(`File type ${file.type}, imported manually`);
 		if (file.type.startsWith("text/") || ! file.type) {
 			processFile(file);
 		} else {
-			// Show error box
+			showError("Unsupported file type");
 		}
 	}
 });
@@ -87,7 +112,7 @@ els.clearBtn.addEventListener("click", (e) => {
 els.form.addEventListener("submit", (e) => {
 	e.preventDefault();
 	console.log("Submit button press");
-	vars = {};
+	const vars = {};
 	for (const formItem of els.formInputElements) {
 		if (formItem.value) {
 			vars[formItem.name] = formItem.value;
@@ -106,7 +131,7 @@ udp2raw.exe -c -l 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "
 	console.log(postUpScript);
 	console.log(postDownScript);
 
-	text = `
+	const text = `
 [Interface]
 PrivateKey = ${vars.USER_PRIVATE_KEY}
 Address = ${vars.USER_ADDRESS}
@@ -124,12 +149,12 @@ Endpoint = 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "50001"}
 `;
 	navigator.clipboard.writeText(text)	
 		.then(() => {
-			els.submitBtn.textContent = "Copied!"
+			els.submitBtn.textContent = "Copied!";
 			els.submitBtn.disabled = true;
 			console.log("Copied!");
 		})
 		.catch(err => {
-			console.error("Failed to copy:", err);
+			showError("Failed to copy to clipboard");
 		});
 });
 
@@ -143,4 +168,5 @@ els.form.addEventListener("change", () => {
 	els.submitBtn.textContent = "Copy Configuration";
 	els.submitBtn.disabled = false;
 });
+
 

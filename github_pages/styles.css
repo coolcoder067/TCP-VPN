@@ -134,7 +134,7 @@ h1 {
   font-size: 30px;
 }
 
-h3 {
+h2 {
   margin: 10px 0;
 }
 
@@ -199,3 +199,58 @@ li {
   border-color: var(--hot-pink-light-1);
 }
 
+#error-box {
+  margin: 0 auto;
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 85%;
+  max-width: 600px;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  border: 2px solid var(--hot-pink-light-1);
+  background-color: var(--hot-pink);
+  align-items: center;
+  padding-left: 12px;
+
+  bottom: -40px;
+  opacity: 0;
+  transition: bottom 0.1s ease;
+}
+
+#error-text {
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+
+#error-box.show {
+  opacity: 1;
+  bottom: 20px;
+}
+
+#error-x-btn {
+  aspect-ratio: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: unset;
+  padding: unset;
+  margin: unset;
+  background-color: unset;
+  cursor: pointer;
+  color: unset;
+}
+
+#error-x-btn:hover {
+  background: color-mix(in srgb, var(--hot-pink-light-1) 70%, transparent);
+}
+
+#error-x-btn:active {
+  background-color: var(--hot-pink-light-1);
+}
+
+#error-x-svg {
+  width: 80%;
+}
