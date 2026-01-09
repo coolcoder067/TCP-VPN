@@ -11,10 +11,12 @@
   box-sizing: border-box;
   margin: 0;
   font-family: "Inconsolata";
-  --outer-bg: #413e63;
   --outer-bg-dark-1: #302e4a;
+  --outer-bg: #413e63;
   --outer-bg-light-1: #4f47a6;
   --outer-bg-light-2: #544ac7;
+  --outer-bg-light-3: #928aed;
+  --outer-bg-light-4: #bdb8ff;
   --inner-bg: #100f1f;
   --elements-padding: 50px;
   --text: #d9d4d0;
@@ -27,6 +29,15 @@
 a {
   text-decoration: none;
   color: inherit;
+}
+
+button {
+  border: unset;
+  padding: unset;
+  margin: unset;
+  background-color: unset;
+  cursor: pointer;
+  color: unset;
 }
 
 body {
@@ -97,12 +108,12 @@ h1 {
   margin: 10px 0;
 }
 
+/* Button */
+
 #generate-btn {
   background-color: var(--outer-bg-light-1);
-  border-color: #928aed;
-  border-style: solid;
+  border: 4px solid var(--outer-bg-light-3);
   padding: 10px 0;
-  border-width: 4px;
   width: 200px;
   text-align: center;
 }
@@ -110,12 +121,11 @@ h1 {
 #generate-btn:hover {
   background-color: var(--outer-bg-light-2);
   cursor: pointer;
-  border-color: #bdb8ff;
+  border-color: var(--outer-bg-light-4);
 }
 
 #generate-btn:active {
-  background-color: transparent;
-  border-color: var(--text);
+  background-color: var(--outer-bg-light-1);
 }
 
 #generate-btn:disabled {
@@ -148,48 +158,63 @@ li {
   font-size: inherit;
 }
 
-#drag-and-drop-zone {
+#buttons-div {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+#buttons-div > * {
+  flex: 1;
   padding: 20px;
-  border: 2px dashed var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 13px;
   user-select: none;
 }
 
-#drag-and-drop > p {
-  margin: 2px 0 !important;
+#buttons-div > *:hover {
+  background-color: var(--outer-bg);
 }
 
-#svg-file-upload {
+#buttons-div > *:active {
+  background-color: var(--outer-bg-dark-1);
+}
+
+#buttons-div > * > svg {
   height: 30px;
   color: var(--text);
 }
 
-#drag-and-drop-zone:hover {
-  background-color: var(--outer-bg);
-  cursor: pointer;
-}
-
-#drag-and-drop-zone:active {
-  background-color: var(--outer-bg-dark-1);
+#buttons-div > * > span {
+  display: flex;
+  align-items: center;
+  flex: 1;
 }
 
 #drag-and-drop-input {
   display: none;
 }
 
+#drag-and-drop-zone {
+  border: 2px dashed var(--text);
+  cursor: pointer;
+}
+
+#paste-clipboard-btn {
+  border: 2px solid var(--text);
+}
+
+/* Button */
+
 #clear-btn {
-  background-color: transparent;
-  border-color: var(--hot-pink);
-  border-style: solid;
+  border: 2px solid var(--hot-pink);
   padding: 6px;
-  border-width: 2px;
 }
 
 #clear-btn:hover {
-  cursor: pointer;
   background-color: var(--hot-pink);
   border-color: var(--hot-pink-light-1);
 }
@@ -226,8 +251,10 @@ li {
 
 #error-box.show {
   opacity: 1;
-  bottom: 20px;
+  bottom: 30px;
 }
+
+/* Button */
 
 #error-x-btn {
   aspect-ratio: 1;
@@ -235,12 +262,7 @@ li {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: unset;
-  padding: unset;
-  margin: unset;
-  background-color: unset;
-  cursor: pointer;
-  color: unset;
+
 }
 
 #error-x-btn:hover {
@@ -252,5 +274,5 @@ li {
 }
 
 #error-x-svg {
-  width: 80%;
+  width: 60%;
 }

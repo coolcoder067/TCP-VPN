@@ -7,7 +7,8 @@ const els = {
 	clearBtn: document.getElementById("clear-btn"),
 	errorText: document.getElementById("error-text"),
 	errorBox: document.getElementById("error-box"),
-	errorBtn: document.getElementById("error-x-btn")
+	errorBtn: document.getElementById("error-x-btn"),
+	pasteClipboardBtn: document.getElementById("paste-clipboard-btn")
 };
 
 
@@ -16,6 +17,50 @@ for (const formItem of els.formInputElements) {
 		formItem.classList.remove("auto-filled");
 	});
 }
+
+const addToForm = (text) => {
+	const vars = {};
+	text.split("\n").forEach(line => {
+		line = line.trim();
+		if (!line || line.startsWith("#")) return; // skip empty lines or comments
+		const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+		if (match) {
+			const [, key, value] = match;
+			// remove quotes if present
+			vars[key] = value.replace(/^["']|["']$/g, "");
+		}
+	});
+	console.log(vars);
+	if (!Object.keys(vars).length) {
+		showError("No configuration information found in the file");
+	} else {
+		for (const formItem of els.formInputElements) {
+			if (formItem.name in vars) {
+				formItem.value = vars[formItem.name];
+				formItem.classList.add("auto-filled");
+			}
+		}
+	}
+};
+
+els.pasteClipboardBtn.addEventListener("click", async(e) => {
+	try {
+		console.log(typeof navigator.clipboard.readText);
+		if (typeof navigator.clipboard.readText !== "function") {
+			showError("Pasting from clipboard is unsupported");
+		} else {
+			addToForm(await navigator.clipboard.readText());
+		}
+	} catch (err) {
+		if (err.name === "NotAllowedError") {
+			showError("Access to clipboard was denied");
+		} else if (err.name === "NotFoundError") {
+			showError("No text was found on the clipboard");
+		} else {
+			throw err;
+		}
+	}
+});
 
 let errorHideTimeout;
 
@@ -30,7 +75,7 @@ const showError = (err) => {
 				els.errorBox.removeEventListener("transitionend", handler);
 				els.errorBox.classList.add("show");
 			}
-		})
+		});
 	} else {
 		els.errorBox.classList.add("show");
 	}
@@ -47,40 +92,16 @@ els.errorBtn.addEventListener("click", (e) => {
 	els.errorBox.classList.remove("show");
 });
 
-const processFile = async (file) => {
-	// Add to form
-	const text = await file.text();
-	const vars = {};
-	text.split("\n").forEach(line => {
-		line = line.trim();
-		if (!line || line.startsWith("#")) return; // skip empty lines or comments
-		const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-		if (match) {
-			const [, key, value] = match;
-			// remove quotes if present
-			vars[key] = value.replace(/^["']|["']$/g, "");
-		}
-	});
-	console.log(vars);
-	for (const formItem of els.formInputElements) {
-		if (formItem.name in vars) {
-			formItem.value = vars[formItem.name];
-			formItem.classList.add("auto-filled");
-		}
-	}
 
-};
-
-
-els.dragAndDropZone.addEventListener("drop", (e) => {
+els.dragAndDropZone.addEventListener("drop", async(e) => {
 	e.preventDefault();
 	const files = e.dataTransfer.files;
 	if (files.length > 0) {
 		console.log(`File type ${files[0].type}, dragged and dropped`);
 		if (files[0].type.startsWith("text/") || ! files[0].type) {
-			processFile(files[0]);
+			addToForm(await files[0].text());
 		} else {
-			showError("No configuration information found");
+			showError("Unsupported file type");
 		}
 	}
 });
@@ -89,12 +110,12 @@ els.dragAndDropZone.addEventListener("dragover", (e) => {
 	e.preventDefault();
 });
 
-els.dragAndDropInput.addEventListener("change", (e) => {
+els.dragAndDropInput.addEventListener("change", async(e) => {
 	if (e.target.files.length > 0) {
 		const file = e.target.files[0];
 		console.log(`File type ${file.type}, imported manually`);
 		if (file.type.startsWith("text/") || ! file.type) {
-			processFile(file);
+			addToForm(await file.text());
 		} else {
 			showError("Unsupported file type");
 		}
