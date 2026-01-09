@@ -1,0 +1,201 @@
+@font-face {
+  font-family: "Inconsolata";
+  src: url("https://fonts.gstatic.com/s/inconsolata/v37/QlddNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmAwLyya15IDhunA.woff2") format('woff2');
+  font-display: swap;
+  font-weight: 200 900;
+  font-stretch: 100%;
+}
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  font-family: "Inconsolata";
+  --outer-bg: #413e63;
+  --outer-bg-dark-1: #302e4a;
+  --outer-bg-light-1: #4f47a6;
+  --outer-bg-light-2: #544ac7;
+  --inner-bg: #100f1f;
+  --elements-padding: 50px;
+  --text: #d9d4d0;
+  --hot-pink: #e32092;
+  --hot-pink-light-1: #ff6bc1;
+  --hot-pink-dark-1: #b01e73;
+  color: var(--text);
+  font-size: 18px;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding: 15vh 0;
+  background-color: var(--outer-bg);
+  align-items: center;
+}
+
+body > div {
+  width: 100%;
+  max-width: 800px;
+}
+
+body > div:first-child {
+  margin-top: 0;
+}
+
+#main {
+  background-color: var(--inner-bg);
+  padding: var(--elements-padding);
+}
+
+#input-div {
+  border: 4px solid var(--text);
+  padding: 30px;
+  margin: 30px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+label {
+  font-size: 14px;
+}
+
+input {
+  display: block;
+  font-size: 18px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 0;
+  border: 2px solid var(--text);
+  margin: 7px 0;
+  outline: none;
+  background: none;
+}
+
+input::placeholder {
+  color: #636091;
+}
+
+input:focus::placeholder {
+  color: var(--inner-bg);
+}
+
+.auto-filled {
+  background-color: var(--outer-bg);
+}
+
+p {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+h1 {
+  margin: 10px 0;
+}
+
+#generate-btn {
+  background-color: var(--outer-bg-light-1);
+  border-color: #928aed;
+  border-style: solid;
+  padding: 10px 0;
+  border-width: 4px;
+  width: 200px;
+  text-align: center;
+}
+
+#generate-btn:hover {
+  background-color: var(--outer-bg-light-2);
+  cursor: pointer;
+  border-color: #bdb8ff;
+}
+
+#generate-btn:active {
+  background-color: transparent;
+  border-color: var(--text);
+}
+
+#generate-btn:disabled {
+  cursor: default;
+  background-color: transparent !important;
+  border-color: var(--outer-bg-light-1) !important;
+  color: var(--outer-bg-light-1) !important;
+}
+
+#footer {
+  padding: var(--elements-padding);
+  border-bottom: 2px solid var(--text);
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h3 {
+  margin: 10px 0;
+}
+
+li {
+  margin: 10px 0;
+}
+
+.optional-text {
+  font-weight: 700;
+  float: right;
+  font-size: inherit;
+}
+
+#drag-and-drop-zone {
+  padding: 20px;
+  border: 2px dashed var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  user-select: none;
+}
+
+#drag-and-drop > p {
+  margin: 2px 0 !important;
+}
+
+#svg-file-upload {
+  height: 30px;
+  color: var(--text);
+}
+
+#drag-and-drop-zone:hover {
+  background-color: var(--outer-bg);
+  cursor: pointer;
+}
+
+#drag-and-drop-zone:active {
+  background-color: var(--outer-bg-dark-1);
+}
+
+#drag-and-drop-input {
+  display: none;
+}
+
+#clear-btn {
+  background-color: transparent;
+  border-color: var(--hot-pink);
+  border-style: solid;
+  padding: 6px;
+  border-width: 2px;
+}
+
+#clear-btn:hover {
+  cursor: pointer;
+  background-color: var(--hot-pink);
+  border-color: var(--hot-pink-light-1);
+}
+
+#clear-btn:active {
+  background-color: var(--hot-pink-dark-1);
+  border-color: var(--hot-pink-light-1);
+}
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="styles.css">
+		<title>VPN Conf Generator</title>
+		<script src="./script.js" defer></script>
+  </head>
+  <body>
+	<div id="main">
+		<h1>TCP-VPN Configuration Generator</h1>
+		<p>Windows Only</p>
+		<form id="form">
+			<div id="input-div">
+				<label id="drag-and-drop-zone">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" id="svg-file-upload"><g fill="currentColor"><path d="M54.9,60H9.1C6.3,60,4,57.8,4,55V43c0-1.7,1.3-3,3-3s3,1.3,3,3v11h44V43c0-1.7,1.3-3,3-3s3,1.3,3,3v12   C60,57.8,57.7,60,54.9,60z"/><path d="M50,18.8L35.5,5.4c-2-1.8-5-1.8-7,0L14,18.8c-1.3,1.1-1.4,3-0.3,4.2c1.1,1.3,3,1.4,4.2,0.3c0.1-0.1,0.1-0.1,0.2-0.2   l11-10.1V47c0,1.7,1.3,3,3,3c1.7,0,3-1.3,3-3V13.1l11,10.1c1.2,1.2,3.1,1.2,4.2,0s1.2-3.1,0-4.2C50.2,18.9,50.1,18.9,50,18.8z"/></g></svg>
+					<p>Drag and drop or click to import file</p>
+					<input id="drag-and-drop-input" type="file">
+				</label>
+				<label>Endpoint Address
+					<input class="form-item" type="text" name="ENDPOINT_ADDRESS" spellcheck="false" placeholder="123.123.123.123" required>
+				</label>
+				<label>Resolve with DNS
+					<input class="form-item" type="text" name="RESOLVE_WITH_DNS" spellcheck="false" placeholder="true/false" required>
+				</label>
+				<label>Endpoint Port
+					<input class="form-item" type="text" name="ENDPOINT_PORT" spellcheck="false" placeholder="443" required>
+				</label>
+				<label>Server Public Key
+					<input class="form-item" type="text" name="SERVER_PUBLIC_KEY" spellcheck="false" placeholder="############################################" required>
+				</label>
+				<label>udp2raw password
+					<input class="form-item" type="text" name="UDP2RAW_PWD" spellcheck="false" placeholder="############################" required>
+				</label>
+				<label>User Private Key
+					<input class="form-item" type="text" name="USER_PRIVATE_KEY" spellcheck="false" placeholder="############################################" required>
+				</label>
+				<label>IP Addresses Allocated to your User
+					<input class="form-item" type="text" name="USER_ADDRESS" spellcheck="false" placeholder="10.0.0.2/24, fd42:42:42::2/64" required>
+				</label>
+				<label>Custom DNS Servers
+					<span class="optional-text">Optional</span>
+					<input class="form-item" type="text" name="DNS_SERVERS" spellcheck="false" placeholder="1.1.1.1, 2606:4700:4700::1111">
+				</label>
+				<label>Internal udp2raw Forward Port
+					<span class="optional-text">Optional</span>
+					<input class="form-item" type="text" name="WIREGUARD_PORT" spellcheck="false" placeholder="50001">
+				</label>
+				<button type="button" id="clear-btn">Clear Form</button>
+			</div>
+			<button type="submit" id="generate-btn">Copy Configuration</button>
+		</form>
+	</div>
+	<div id="footer">
+		<h3>Next Steps</h3>
+		<ul>
+			<li>Download the Wireguard app.</li>
+			<li>Paste your new configuration into the app.</li>
+		</ul>
+  </body>
+</html>

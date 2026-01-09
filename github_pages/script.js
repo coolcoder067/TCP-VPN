@@ -1,0 +1,142 @@
+const els = {
+	dragAndDropZone: document.getElementById("drag-and-drop-zone"),
+	dragAndDropInput: document.getElementById("drag-and-drop-input"),
+	form: document.getElementById("form"),
+	submitBtn: document.getElementById("generate-btn"),
+	formInputElements: document.getElementsByClassName("form-item"),
+	clearBtn: document.getElementById("clear-btn")
+}
+
+
+for (const formItem of els.formInputElements) {
+	formItem.addEventListener("focus", () => {
+		formItem.classList.remove("auto-filled");
+	});
+}
+
+const processFile = async (file) => {
+	// Add to form
+	const text = await file.text();
+	const vars = {};
+	text.split("\n").forEach(line => {
+		line = line.trim();
+		if (!line || line.startsWith("#")) return; // skip empty lines or comments
+		const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+		if (match) {
+			const [, key, value] = match;
+			// remove quotes if present
+			vars[key] = value.replace(/^["']|["']$/g, "");
+		}
+	});
+	console.log(vars);
+	for (const formItem of els.formInputElements) {
+		if (formItem.name in vars) {
+			formItem.value = vars[formItem.name];
+			formItem.classList.add("auto-filled");
+		}
+	}
+
+}
+
+
+els.dragAndDropZone.addEventListener("drop", (e) => {
+	const fileItems = [...e.dataTransfer.items]
+		.filter((item) => item.kind === "file");
+	if (fileItems.length > 0) {
+		e.preventDefault();
+		const file = fileItems[0].getAsFile();
+		console.log(`File type ${file.type}, dragged and dropped`)
+		if (file.type.startsWith("text/") || ! file.type) {
+			processFile(file);
+		} else {
+			// Show error box
+		}
+	}
+});
+
+
+els.dragAndDropZone.addEventListener("dragover", (e) => {
+	const fileItems = [...e.dataTransfer.items]
+		.filter((item) => item.kind === "file");
+	if (fileItems.length > 0) {
+		e.preventDefault();
+	}
+
+});
+
+els.dragAndDropInput.addEventListener("change", (e) => {
+	if (e.target.files.length > 0) {
+		const file = e.target.files[0];
+		console.log(`File type ${file.type}, imported manually`)
+		if (file.type.startsWith("text/") || ! file.type) {
+			processFile(file);
+		} else {
+			// Show error box
+		}
+	}
+});
+
+
+els.clearBtn.addEventListener("click", (e) => {
+	for (const formItem of els.formInputElements) {
+		formItem.value = "";
+		formItem.classList.remove("auto-filled");
+	}
+});
+
+els.submitBtn.addEventListener("click", (e) => {
+	e.preventDefault();
+	console.log("Submit button press");
+	vars = {};
+	for (const formItem of els.formInputElements) {
+		if (formItem.value) {
+			vars[formItem.name] = formItem.value;
+		}
+	}
+	console.log(vars);
+	const preUpScript = ``
+
+	const postUpScript = `
+udp2raw.exe -c -l 127.0.0.1:${vars.WIREGUARD_PORT} -r ${vars.ENDPOINT_ADDRESS}:${vars.ENDPOINT_PORT} -k "${vars.UDP2RAW_PWD} --cipher-mode xor --auth-mode simple
+`
+
+	const postDownScript = ``
+
+	text = `
+[Interface]
+PrivateKey = ${vars.USER_PRIVATE_KEY}
+Address = ${vars.USER_ADDRESS}
+DNS = ${"DNS_SERVERS" in vars ? vars.DNS_SERVERS : "1.1.1.1, 2606:4700:4700::1111"}
+MTU = 1342
+
+PreUp = powershell -EncodedCommand "${btoa(preUpScript)}"
+PostUp = powershell -EncodedCommand "${btoa(postUpScript)}"
+PostDown = powershell -EncodedCommand "${btoa(postDownScript)}"
+
+[Peer]
+PublicKey = ${vars.SERVER_PUBLIC_KEY}
+AllowedIPs = 0.0.0.0/0, ::/0
+Endpoint = 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "50001"}
+`
+	navigator.clipboard.writeText(text)	
+		.then(() => {
+			els.submitBtn.textContent = "Copied!"
+			els.submitBtn.disabled = true;
+			console.log("Copied!");
+		})
+		.catch(err => {
+			console.error("Failed to copy:", err)
+		});
+});
+
+els.form.addEventListener("input", () => {
+	els.submitBtn.textContent = "Copy Configuration"
+	els.submitBtn.disabled = false;
+});
+
+
+els.form.addEventListener("change", () => {
+	els.submitBtn.textContent = "Copy Configuration"
+	els.submitBtn.disabled = false;
+});
+
