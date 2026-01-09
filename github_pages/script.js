@@ -84,7 +84,7 @@ els.clearBtn.addEventListener("click", (e) => {
 	}
 });
 
-els.submitBtn.addEventListener("click", (e) => {
+els.form.addEventListener("submit", (e) => {
 	e.preventDefault();
 	console.log("Submit button press");
 	vars = {};
@@ -94,13 +94,17 @@ els.submitBtn.addEventListener("click", (e) => {
 		}
 	}
 	console.log(vars);
-	const preUpScript = ``
+	const preUpScript = ``;
 
 	const postUpScript = `
-udp2raw.exe -c -l 127.0.0.1:${vars.WIREGUARD_PORT} -r ${vars.ENDPOINT_ADDRESS}:${vars.ENDPOINT_PORT} -k "${vars.UDP2RAW_PWD} --cipher-mode xor --auth-mode simple
-`
+udp2raw.exe -c -l 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "50001"} -r ${vars.ENDPOINT_ADDRESS}:${vars.ENDPOINT_PORT} -k "${vars.UDP2RAW_PWD} --cipher-mode xor --auth-mode simple
+`;
 
-	const postDownScript = ``
+	const postDownScript = ``;
+
+	console.log(preUpScript);
+	console.log(postUpScript);
+	console.log(postDownScript);
 
 	text = `
 [Interface]
@@ -117,7 +121,7 @@ PostDown = powershell -EncodedCommand "${btoa(postDownScript)}"
 PublicKey = ${vars.SERVER_PUBLIC_KEY}
 AllowedIPs = 0.0.0.0/0, ::/0
 Endpoint = 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "50001"}
-`
+`;
 	navigator.clipboard.writeText(text)	
 		.then(() => {
 			els.submitBtn.textContent = "Copied!"
@@ -125,18 +129,18 @@ Endpoint = 127.0.0.1:${"WIREGUARD_PORT" in vars ? vars.WIREGUARD_PORT : "50001"}
 			console.log("Copied!");
 		})
 		.catch(err => {
-			console.error("Failed to copy:", err)
+			console.error("Failed to copy:", err);
 		});
 });
 
 els.form.addEventListener("input", () => {
-	els.submitBtn.textContent = "Copy Configuration"
+	els.submitBtn.textContent = "Copy Configuration";
 	els.submitBtn.disabled = false;
 });
 
 
 els.form.addEventListener("change", () => {
-	els.submitBtn.textContent = "Copy Configuration"
+	els.submitBtn.textContent = "Copy Configuration";
 	els.submitBtn.disabled = false;
 });
 
